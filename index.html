@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ved frå Teigen – tørr bjørkeved og granved i Naustdal og Førde</title>
+<meta name="description" content="Tørr bjørkeved og granved i 60 liters sekk, og laus kubikk. Levering i Førde og Naustdal, eller hent sjølv i Naustdal. Rekn ut prisen og bestill på SMS.">
+<meta name="theme-color" content="#2f6b3f">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="nn_NO">
+<meta property="og:title" content="Tørr ved – Ved frå Teigen">
+<meta property="og:description" content="Bjørk 60 l sekk 125 kr · Gran 60 l sekk 79 kr · Laus m³ 2 000 kr · Levering i Førde og Naustdal. Rekn ut prisen og bestill på SMS.">
+<meta property="og:url" content="https://vedfrateigen.github.io/">
+<meta property="og:image" content="https://vedfrateigen.github.io/og-bilde.jpg">
+<link rel="canonical" href="https://vedfrateigen.github.io/">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<link rel="icon" href="ikon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ikon-180.png">
+<link rel="stylesheet" href="stil.css">
+<style>
+  .topp { background: linear-gradient(170deg, rgba(30,70,40,.93) 0%, rgba(36,84,47,.82) 55%, rgba(47,107,63,.62) 100%), #24542f url(bilder/stabel.jpg) center 60% / cover; color: #fff; }
+  .topp h1, .topp .ingress { text-shadow: 0 1px 12px rgba(0,0,0,.35); }
+  .foto { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; margin: 4px 0 12px; }
+  .topp .side { padding-top: 22px; padding-bottom: 30px; }
+  .merke { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+  .merke img { width: 44px; height: 44px; border-radius: 11px; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .topp h1 { font-size: clamp(2rem, 8vw, 2.8rem); margin: 22px 0 10px; letter-spacing: -.01em; }
+  .ingress { font-size: 1.1em; opacity: .95; margin-bottom: 20px; }
+  .topp .knapp { border-color: #fff; background: #fff; color: #24542f; }
+  .priser { margin: -4px 0 24px; }
+  .prisliste { padding: 6px 18px; }
+  .prisrad { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; }
+  .prisrad + .prisrad { border-top: 1px solid var(--linje); }
+  .prisrad .per { display: block; font-size: .5em; font-weight: 600; color: var(--dempet); text-align: right; }
+  .prisliste .pris { font-size: 1.5em; font-weight: 800; color: var(--brun); line-height: 1.1; white-space: nowrap; text-align: right; }
+  .prisliste .navn { font-weight: 700; }
+  .prisliste .detalj { color: var(--dempet); font-size: .88em; }
+  #bestill h2 { font-size: 1.4em; }
+  .send { display: grid; gap: 12px; margin-top: 18px; }
+  .info { margin-top: 28px; display: grid; gap: 14px; }
+  .info h2 { font-size: 1.15em; display: flex; gap: 8px; align-items: center; }
+  .info p:last-child, .info table:last-child { margin-bottom: 0; }
+  .eksempler { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  .eksempler td { padding: 6px 0; border-bottom: 1px solid var(--linje); }
+  .eksempler td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+  .bunn { color: var(--dempet); font-size: .85em; padding: 24px 16px 40px; max-width: 640px; margin: 0 auto; }
+  .bunn h2 { font-size: 1em; margin-top: 1em; }
+  .takk { text-align: center; }
+</style>
+</head>
+<body>
+<header class="topp">
+  <div class="side">
+    <div class="merke"><img src="ikon.svg" alt=""><span id="merkenavn">Ved frå Teigen</span></div>
+    <h1>Tørr ved frå Naustdal</h1>
+    <p class="ingress">Bjørk til fyring og gran til opptenning. Levert på døra i Førde og Naustdal – eller hent sjølv.</p>
+    <a class="knapp stor" href="#bestill">Rekn ut pris og bestill</a>
+  </div>
+</header>
+
+<main class="side" style="padding-bottom:0">
+  <noscript><p class="boks-gul">Sida treng JavaScript for å rekne ut pris. Du kan framleis ringje eller sende SMS.</p></noscript>
+  <section class="priser" id="priser" aria-label="Prisar"></section>
+
+  <section class="kort" id="bestill">
+    <h2>Rekn ut pris og bestill</h2>
+    <div id="skjema"></div>
+    <div class="send" id="send"></div>
+  </section>
+
+  <div class="info" id="info"></div>
+</main>
+
+<footer class="bunn" id="bunn"></footer>
+
+<script src="config.js"></script>
+<script src="felles.js"></script>
+<script src="kunde.js"></script>
+</body>
+</html>

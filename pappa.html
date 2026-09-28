@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="nn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vedsal</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2f6b3f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="ikon-180.png">
+<link rel="stylesheet" href="stil.css">
+<style>
+  .app-topp { position: sticky; top: 0; z-index: 10; background: var(--gronn); color: #fff; padding-top: env(safe-area-inset-top); box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+  .app-topp-innhold { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 0 12px; }
+  .app-topp img { width: 38px; height: 38px; border-radius: 10px; }
+  .app-tittel { font-weight: 800; font-size: 1.2em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tilbake { background: rgba(255,255,255,.16); color: #fff; border: 0; border-radius: 12px; min-height: 48px; padding: 8px 16px; font-weight: 800; cursor: pointer; white-space: nowrap; flex: none; }
+  .seksjon-tittel { margin: 30px 0 12px; font-size: 1.1em; display: flex; gap: 10px; align-items: center; }
+  .antall-merke { background: var(--brun); color: #fff; border-radius: 999px; padding: 1px 11px; font-size: .85em; }
+  .tom { color: var(--dempet); }
+  .ordre { margin-bottom: 14px; }
+  .ordre-topp { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .ordre-navn { margin: 0; font-size: 1.2em; overflow-wrap: anywhere; }
+  .ordre p { margin: 4px 0; overflow-wrap: anywhere; }
+  .ordre-hva { font-weight: 700; }
+  .ordre-notat { font-style: italic; }
+  .ordre-pris { font-size: 1.15em; }
+  .ordre-dato { color: var(--dempet); font-size: .85em; }
+  .ordre .knapp-rad, .ordre .sporsmal { margin-top: 12px; }
+  .ordre.ubetalt { border-left: 6px solid var(--gul-kant); }
+  .sporsmal { display: grid; gap: 10px; }
+  .sporsmal-tekst { font-weight: 800; margin: 0; font-size: 1.1em; }
+  .hjem-meny { margin-top: 30px; }
+  .ferdige { margin-top: 26px; }
+  .ferdige summary { cursor: pointer; font-weight: 700; padding: 12px 0; min-height: 48px; }
+  .ferdig-rad { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--linje); font-size: .9em; }
+  .ferdig-rad a { flex: none; }
+  .skjema-knapper { display: grid; gap: 12px; margin-top: 18px; }
+  .slett { margin-top: 36px; }
+  .tall-rute { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .tall-boks { background: var(--kort); border: 1px solid var(--linje); border-radius: 14px; padding: 14px; }
+  .tall-boks.bred { grid-column: 1 / -1; }
+  .tall-stort { font-size: 1.6em; font-weight: 800; line-height: 1.15; }
+  .tall-navn { color: var(--dempet); font-size: .9em; }
+  .aar-velger { display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; gap: 8px; text-align: center; font-size: 1.3em; font-weight: 800; }
+  .aar-velger .knapp { min-height: 52px; padding: 0; }
+  .fremdrift { height: 16px; background: var(--linje); border-radius: 999px; overflow: hidden; margin: 8px 0; }
+  .fremdrift > div { height: 100%; background: var(--gronn); }
+  .maaned-tabell { width: 100%; border-collapse: collapse; }
+  .maaned-tabell td, .maaned-tabell th { padding: 8px 0; border-bottom: 1px solid var(--linje); text-align: left; }
+  .maaned-tabell td:last-child, .maaned-tabell th:last-child { text-align: right; }
+  textarea.annonse { min-height: 380px; font-size: .9em; line-height: 1.45; }
+  .stabel { display: grid; gap: 12px; }
+</style>
+</head>
+<body class="stor">
+<header class="app-topp">
+  <div class="app-topp-innhold">
+    <button id="tilbake" class="tilbake" type="button" hidden>‹ Tilbake</button>
+    <img id="topp-ikon" src="ikon.svg" alt="">
+    <span class="app-tittel" id="tittel">Vedsal</span>
+  </div>
+</header>
+<main id="app" class="side"></main>
+<noscript><p class="side">Appen treng JavaScript.</p></noscript>
+<script src="config.js"></script>
+<script src="felles.js"></script>
+<script src="pappa.js"></script>
+</body>
+</html>

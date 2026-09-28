@@ -1,0 +1,7 @@
+.DS_Store
+.claude/
+# Originalfoto (kan ha GPS i EXIF) og genererte filer
+verktoy/foto/
+verktoy/bilder/
+verktoy/bygg/
+leveranse/

@@ -1,0 +1,68 @@
+{
+ "rot": ".",
+ "ut": "verktoy/bilder",
+ "forJs": "verktoy/demo-data.js",
+ "bilder": [
+  {
+   "navn": "01-hjem",
+   "side": "pappa.html#/"
+  },
+  {
+   "navn": "02-hjem-skjerm",
+   "side": "pappa.html#/",
+   "hoyde": 844
+  },
+  {
+   "navn": "03-ferdig-sporsmal",
+   "side": "pappa.html#/",
+   "js": "__knapp(\"Ferdig\");",
+   "klipp": ".ordre"
+  },
+  {
+   "navn": "04-ny-tom",
+   "side": "pappa.html#/ny",
+   "hoyde": 844
+  },
+  {
+   "navn": "05-oversikt",
+   "side": "pappa.html#/oversikt"
+  },
+  {
+   "navn": "06-facebook",
+   "side": "pappa.html#/facebook",
+   "hoyde": 844
+  },
+  {
+   "navn": "07-fra-nettside",
+   "side": "pappa.html#i=demo9&n=Lise+Berg&t=00000000&sekk=5&gran=1&l=1&a=Hafstadvegen+11%2C+6800+F%C3%B8rde&la=61.45175&lo=5.84622&x=Helst+etter+klokka+16",
+   "js": "await __venterPaa(\".avstand-km\");"
+  },
+  {
+   "navn": "08-ubetalt-kort",
+   "side": "pappa.html#/",
+   "klipp": ".ordre.ubetalt"
+  },
+  {
+   "navn": "09-kunde-topp",
+   "side": "index.html",
+   "hoyde": 844
+  },
+  {
+   "navn": "10-kunde-skjema",
+   "side": "index.html",
+   "js": "\nfor (let i = 0; i < 10; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nfor (let i = 0; i < 2; i++) document.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp(\"Levering\");\n__skriv(\"#kunde-adresse\", \"Storehagen 1a førde\");\nawait __venterPaa(\".forslag-knapp\");\ndocument.querySelector(\".forslag-knapp\").click();\nawait __venterPaa(\".avstand-km\");\n__skriv(\"#kunde-navn\", \"Kari Nordmann\");\n__skriv(\"#kunde-telefon\", \"000 00 000\");\n__skriv(\"#kunde-notat\", \"Laurdag føremiddag, legg ved garasjen\");\ndocument.activeElement && document.activeElement.blur();\n",
+   "klipp": "#bestill",
+   "etterJs": "__knapp(\"Bestill på SMS\");"
+  },
+  {
+   "navn": "11-kunde-hele",
+   "side": "index.html"
+  },
+  {
+   "navn": "12-ny-utfylt",
+   "side": "pappa.html#/ny",
+   "js": "\nfor (let i = 0; i < 10; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nfor (let i = 0; i < 2; i++) document.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp(\"Levering\");\n__skriv(\"#pappa-adresse\", \"Storehagen 1a førde\");\nawait __venterPaa(\".forslag-knapp\");\ndocument.querySelector(\".forslag-knapp\").click();\nawait __venterPaa(\".avstand-km\");\n__skriv(\"#pappa-navn\", \"Kari Nordmann\");\n__skriv(\"#pappa-telefon\", \"000 00 000\");\n__skriv(\"#pappa-notat\", \"Laurdag føremiddag, legg ved garasjen\");\ndocument.activeElement && document.activeElement.blur();\n",
+   "etterJs": "__knapp(\"Send prisen til kunden\");"
+  }
+ ]
+}
