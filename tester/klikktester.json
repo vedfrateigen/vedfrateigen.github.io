@@ -74,6 +74,36 @@
    "side": "pappa.html#/ny",
    "hoyde": 844,
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\ndocument.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp('Levering');\n__skriv('#pappa-navn', 'Nabo');\nawait __v(100);\nsjekk([...document.querySelectorAll('.boks-gul')].some(e => !e.hidden && e.textContent.includes('Du kan lagre likevel')), 'manglar åtvaring for pappa');\n__knapp('Lagre bestillinga');\nawait __v(400);\nsjekk(JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.some(o => o.navn === 'Nabo'), 'pappa fekk ikkje lagre under minstebestilling');\n"
+  },
+  {
+   "navn": "t13-hurtigsal",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 3; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Betalt kontant');\nawait __v(400);\nconst o = JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.find(x => x.total === 375 && x.betalt === 'kontant');\nsjekk(o && o.status === 'ferdig' && o.levering === false, 'hurtigsal vart ikkje lagra som ferdig og betalt: ' + JSON.stringify(o));\nsjekk(document.getElementById('melding').textContent.includes('Selt og betalt'), 'manglar melding');\n"
+  },
+  {
+   "navn": "t14-tidlegare-kunde",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\ndocument.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__skriv('#pappa-navn', 'kar');\nawait __v(100);\nconst knapp = document.querySelector('.kunde-knapp');\nsjekk(knapp && knapp.textContent.includes('Kari Nordmann'), 'fann ikkje tidlegare kunde');\nknapp.click();\nawait __v(300);\nsjekk(document.querySelector('#pappa-telefon').value === '00000000', 'telefon vart ikkje fylt inn');\nsjekk(document.querySelector('#pappa-adresse').value.startsWith('Storehagen 1A'), 'adresse vart ikkje fylt inn');\nsjekk(document.querySelector('.avstand').textContent.includes('frakt 250'), 'frakt manglar: ' + document.querySelector('.avstand').textContent);\n"
+  },
+  {
+   "navn": "t15-avtalt-pris",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 10; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Hentar sjølv');\n__knapp('Endre totalprisen');\n__skriv('#pappa-total', '1100');\nawait __v(100);\nsjekk(document.querySelector('.sum-total').textContent.includes('avtalt pris') && document.querySelector('.sum-total').textContent.replace(/\\D/g, '') === '1100', 'avtalt pris vart ikkje brukt');\n__skriv('#pappa-navn', 'Venn');\n__knapp('Lagre bestillinga');\nawait __v(400);\nconst o = JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.find(x => x.navn === 'Venn');\nsjekk(o && o.total === 1100 && o.manuellTotal === 1100, 'avtalt pris vart ikkje lagra');\n"
+  },
+  {
+   "navn": "t16-kvittering",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\ndocument.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__skriv('#pappa-navn', 'Kvitt Testesen');\n__skriv('#pappa-telefon', '000 00 000');\n__knapp('Betalt med Vipps');\nawait __v(500);\ndocument.querySelector('details.ferdige').open = true;\nconst rad = [...document.querySelectorAll('.ferdig-rad')].find(r => r.textContent.includes('Kvitt Testesen'));\nconst lenke = rad && [...rad.querySelectorAll('a')].find(a => a.textContent === 'Kvittering');\nsjekk(lenke, 'manglar kvitteringslenke');\nconst tekst = decodeURIComponent(lenke.getAttribute('href').split('body=')[1]);\nsjekk(lenke.getAttribute('href').startsWith('sms:+4700000000') && tekst.includes('Kvittering frå Ved frå Teigen') && tekst.includes('79') && tekst.includes('Vipps') && tekst.includes('Helsing Kjell Arne'), 'feil kvittering: ' + tekst);\n"
+  },
+  {
+   "navn": "t17-utselt",
+   "side": "index.html#utselt=gran",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst rad = [...document.querySelectorAll('.vare')].find(r => r.textContent.includes('Granved'));\nsjekk(rad && rad.classList.contains('utselt') && rad.querySelector('[aria-label=\"Fleire sekkar gran\"]').disabled, 'gran er ikkje merka utselt i skjemaet');\nsjekk([...document.querySelectorAll('.prisrad')].some(r => r.textContent.includes('Granved') && r.textContent.includes('Utselt no')), 'prislista viser ikkje utselt');\n"
   }
  ]
 }

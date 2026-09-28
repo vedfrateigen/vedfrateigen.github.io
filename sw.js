@@ -1,5 +1,5 @@
 /* Gjør at Vedsal åpner seg også uten dekning. Henter alltid nyeste versjon når det er nett. */
-const CACHE = "vedsal-2026-09-28-1832";
+const CACHE = "vedsal-2026-09-28-1848";
 const FILER = ["./", "index.html", "pappa.html", "stil.css", "config.js", "felles.js", "kunde.js", "pappa.js",
   "ikon.svg", "ikon-192.png", "ikon-180.png", "manifest.webmanifest"];
 

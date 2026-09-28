@@ -335,7 +335,7 @@ def forside(c):
         y -= 40
     c.setFont("Av-R", 10.5)
     c.setFillColor(DEMPET)
-    c.drawString(M, 44, "Laga til deg av Benjamin  ·  september 2026")
+    c.drawString(M, 44, "Laga til " + k.C["selgerFornavn"] + " av Benjamin  ·  september 2026")
 
 
 def side_nytte(c):
@@ -411,9 +411,9 @@ def side_ny_bestilling(c):
                 ingress="Det tek under eitt minutt. Appen reknar ut prisen medan du fyller inn.")
     pw, gap = 184, 64
     x1 = (W - 2 * pw - gap) / 2
-    b1 = telefon(c, "13-ny-utfylt-topp.png", x1, y, pw, [(1, 80), (2, 534), (3, 1782), (4, 2190)])
-    telefon(c, "14-ny-utfylt-bunn.png", x1 + pw + gap, y, pw, [(5, 480), (6, 2248), (7, 2470)])
-    y = to_kolonner_steg(c, b1 - 22, [
+    b1 = telefon(c, "13-ny-utfylt-topp.png", x1, y, pw, [(1, 80), (2, 534), (3, 1738), (4, 2190)])
+    b2 = telefon(c, "14-ny-utfylt-bunn.png", x1 + pw + gap, y, pw, [(5, 541), (6, 2578), (7, 2815)])
+    y = to_kolonner_steg(c, min(b1, b2) - 22, [
         "Trykk «Ny bestilling» på framsida.",
         "Trykk <b>+</b> til rett tal sekkar – bjørk, gran eller laus kubikk.",
         "Vel «Levering» eller «Hentar sjølv».",
@@ -684,7 +684,8 @@ def side_sporsmal(c):
         nummer(c, M + 32, yy - 9, n, r=10, farge=BRUN)
         yy = para(c, t, M + 52, yy, kol - 72, hvit) - 8
     yy -= 8
-    para(c, "<b>Lurer du på noko? Ring Benjamin.</b> Du kan ikkje gjere noko gale – og alt kan endrast.",
+    para(c, "<b>Heng huskelista på kjøleskapet</b> – ho seier kva du gjer i kvar situasjon. "
+         "Lurer du på noko? Ring Benjamin. Du kan ikkje gjere noko gale.",
          M + 20, yy, kol - 40, hvit)
 
 

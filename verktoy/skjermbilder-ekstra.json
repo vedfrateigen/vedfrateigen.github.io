@@ -12,7 +12,7 @@
   {
    "navn": "14-ny-utfylt-bunn",
    "side": "pappa.html#/ny",
-   "hoyde": 844,
+   "hoyde": 980,
    "js": "\nfor (let i = 0; i < 10; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nfor (let i = 0; i < 2; i++) document.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp(\"Levering\");\n__skriv(\"#pappa-adresse\", \"Storehagen 1a førde\");\nawait __venterPaa(\".forslag-knapp\");\ndocument.querySelector(\".forslag-knapp\").click();\nawait __venterPaa(\".avstand-km\");\n__skriv(\"#pappa-navn\", \"Kari Nordmann\");\n__skriv(\"#pappa-telefon\", \"000 00 000\");\n__skriv(\"#pappa-notat\", \"Laurdag føremiddag, legg ved garasjen\");\ndocument.activeElement && document.activeElement.blur();\nawait __v(300); const r = document.querySelector(\".steg:nth-of-type(3)\").getBoundingClientRect(); window.scrollTo(0, r.top + scrollY - 90); await __v(300);"
   },
   {

@@ -12,9 +12,11 @@
       h("div", {},
         h("div", { class: "navn", text: p.navn }),
         h("div", { class: "detalj", text: p.detalj })),
-      h("div", { class: "pris" }, kr(p.pris), h("span", { class: "per", text: "per " + p.eining })))),
+      (C.utselt || []).includes(p.id)
+        ? h("div", { class: "pris utselt", text: "Utselt no" })
+        : h("div", { class: "pris" }, kr(p.pris), h("span", { class: "per", text: "per " + p.eining })))),
     ...(C.rabatt ? [h("div", { class: "prisrad rabatt" },
-      h("div", { class: "navn", text: "💰 " + C.rabatt.fraAntal + " sekkar bjørk eller fleire" }),
+      h("div", { class: "navn" }, h("span", { class: "merkelapp", text: "Tilbod" }), C.rabatt.fraAntal + " sekkar bjørk eller fleire"),
       h("div", { class: "pris" }, kr(C.rabatt.pris), h("span", { class: "per", text: "per sekk" })))] : [])));
 
   /* Kalkulator og bestilling */
@@ -31,7 +33,7 @@
 
   function bestillingstekst(s, lenke) {
     const b = Ved.beregn(s);
-    const linjer = ["Hei! Eg vil bestille ved:", Ved.beskrivAntall(s.antall)];
+    const linjer = ["Hei " + C.selgerFornavn + "! Eg vil bestille ved:", Ved.beskrivAntall(s.antall)];
     if (s.levering) linjer.push("Levering til " + (s.adresse.trim() || "(skriv adressa her)") + (s.km != null ? " (ca. " + tall(s.km) + " km)" : ""));
     else linjer.push("Eg hentar sjølv.");
     const rp = C.rabatt && C.produkter.find((p) => p.id === C.rabatt.produkt);
@@ -61,7 +63,7 @@
   }
 
   const takk = h("div", { class: "boks-gronn takk", hidden: true },
-    h("strong", { text: "Takk! " }), "Trykk «Send» i meldingsappen. Vi svarar deg så fort vi kan og stadfestar prisen.");
+    h("strong", { text: "Takk! " }), "Trykk «Send» i meldingsappen. " + C.selgerFornavn + " svarar deg så fort han kan og stadfestar prisen.");
 
   const sendKnapp = h("button", { class: "knapp primar stor", type: "button", onclick: () => {
     const feil = mangler(skjema.tilstand());
@@ -73,7 +75,7 @@
 
   const ringKnapp = harTelefon
     ? h("a", { class: "knapp", href: "tel:" + Ved.telefonLenke(C.telefon) },
-      h("span", { class: "knapp-ikon", "aria-hidden": "true" }, "📞"), "Ring " + Ved.visTelefon(C.telefon))
+      h("span", { class: "knapp-ikon", "aria-hidden": "true" }, "📞"), "Ring " + C.selgerFornavn + " – " + Ved.visTelefon(C.telefon))
     : null;
 
   const kopierLenke = h("p", { class: "hint" }, "Opnar ikkje meldingsappen seg, eller sit du på PC? ",
@@ -84,7 +86,7 @@
       sendt = true;
       Ved.visMelding(ok ? "Kopiert – send teksten på SMS til " + Ved.visTelefon(C.telefon) + "." : "Klarte ikkje å kopiere.");
     } }, "Kopier bestillinga"),
-    harTelefon ? " og send ho på SMS til " + Ved.visTelefon(C.telefon) + "." : ".");
+    harTelefon ? " og send ho på SMS til " + C.selgerFornavn + " (" + Ved.visTelefon(C.telefon) + ")." : ".");
 
   const send = document.getElementById("send");
   if (!harTelefon) {
@@ -111,7 +113,7 @@
       eksempler,
       h("p", { class: "hint", text: "Vi leverer mest i Naustdal og Førde. Florø og andre stader etter avtale. Over " + L.maksKm + " km avtalar vi prisen." })),
     infoKort("🏠", "Hent sjølv",
-      h("p", {}, "Hent på ", h("strong", { text: C.henteadresse }), ". Send SMS først, så avtalar vi tid."),
+      h("p", {}, "Hent hos " + C.selgerFornavn + " på ", h("strong", { text: C.henteadresse }), ". Send SMS først for å avtale tid."),
       h("a", { class: "knapp", href: Ved.kartLenke({ punkt: C.start }), target: "_blank", rel: "noopener" },
         h("span", { class: "knapp-ikon", "aria-hidden": "true" }, "🗺️"), "Vis vegen på kartet")),
     infoKort("💳", "Betaling",
@@ -125,9 +127,9 @@
     h("h2", { text: "Personvern" }),
     h("p", { text: "Denne sida lagrar ingenting om deg og brukar ikkje informasjonskapslar (cookies). Bestillinga blir send som ein vanleg SMS frå telefonen din. " +
       "Adressa du skriv, blir slått opp hos Kartverket, og kartpunktet blir sendt til ruteplanleggjaren OSRM for å rekne ut køyreavstanden. " +
-      "Seljaren lagrar namn, telefon og adresse på eigen telefon for å levere, og slettar det seinast " + C.slettEtterMaaneder + " månader etter at handelen er ferdig." }),
+      "Seljaren (" + C.selger + ") lagrar namn, telefon og adresse på eigen telefon for å levere, og slettar det seinast " + C.slettEtterMaaneder + " månader etter at handelen er ferdig." }),
     h("p", { text: "Adresser og stadnamn © Kartverket. Køyreavstand frå OSRM, kartdata © OpenStreetMap-bidragsytarar." }),
-    h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.henteadresse }));
+    h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.selger + " · " + C.henteadresse + " · " + Ved.visTelefon(C.telefon) }));
 
   Ved.registrerOffline();
 })();

@@ -1,5 +1,11 @@
 /* Kun for skjermbilder/demo: eksempelbestillinger med fiktive kunder. Brukes ikke i appen. */
 (function () {
+  // Test av «utselt»: side#utselt=gran setter config.utselt før sida starter.
+  const utselt = (location.hash.match(/utselt=([\w,]+)/) || [])[1];
+  if (utselt) {
+    let ved;
+    Object.defineProperty(window, "VED", { configurable: true, get() { return ved; }, set(x) { x.utselt = utselt.split(","); ved = x; } });
+  }
 
   window.__v = (ms) => new Promise((r) => setTimeout(r, ms));
   window.__knapp = (tekst, n) => {

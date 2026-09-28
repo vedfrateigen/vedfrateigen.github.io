@@ -2,6 +2,9 @@
    Endrar du noko her, gjeld det både kundesida (index.html) og pappa-appen (pappa.html). */
 window.VED = {
   navn: "Ved frå Teigen",
+  // Selgeren. Navnet brukes på nettsida, i SMS-ene, i annonsen og på plakat/kort.
+  selger: "Kjell Arne Teigen",
+  selgerFornavn: "Kjell Arne",
 
   // Pappas mobilnummer (8 siffer). Kundesida sender bestillinger hit på SMS.
   telefon: "91750205",
@@ -25,6 +28,9 @@ window.VED = {
       eining: "m³", eintal: "m³ laus bjørk", fleirtal: "m³ laus bjørk", steg: 0.5, maks: 30,
       annonse: "Laus kubikk bjørk, kappa i 30 cm, per m³", kortnavn: "Laus kubikk, per m³" },
   ],
+
+  // Produkter som er utsolgt, f.eks. ["gran"]. Da står «Utselt no» på nettsida og kunden kan ikke velge dem.
+  utselt: [],
 
   // Kjøper kunden «fraAntal» eller flere av produktet, koster hver av dem «pris».
   rabatt: { produkt: "sekk", fraAntal: 20, pris: 120 },

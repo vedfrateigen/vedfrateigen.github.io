@@ -29,17 +29,19 @@ AVENIR = "/System/Library/Fonts/Avenir Next.ttc"
 for navn, nr in [("R", 7), ("M", 5), ("D", 2), ("B", 0), ("H", 8)]:
     pdfmetrics.registerFont(TTFont("Av-" + navn, AVENIR, subfontIndex=nr))
 
-GRONN, GRONN_M, BRUN = HexColor("#2f6b3f"), HexColor("#24542f"), HexColor("#8b4a1c")
+GRONN, GRONN_M, BRUN, RAUD = HexColor("#2f6b3f"), HexColor("#24542f"), HexColor("#8b4a1c"), HexColor("#c62828")
 TEKST, DEMPET, LINJE, KREM = HexColor("#231c15"), HexColor("#6a5c4d"), HexColor("#e2d8c9"), HexColor("#f6f1e9")
 W, H = A4
 M = 40
 
 URL = sys.argv[1] if len(sys.argv) > 1 else None
 TELEFON = k.telefon()
+SELGER = k.C["selger"]
+FORNAVN = k.C["selgerFornavn"]
 PRISAR = [(p["kortnavn"], p["detalj"].lower(), k.kr(p["pris"])) for p in k.C["produkter"]]
 R = k.C.get("rabatt")
 if R:
-    PRISAR.append((f"{R['fraAntal']} sekkar bjørk eller fleire", "rabattpris per sekk", k.kr(R["pris"])))
+    PRISAR.append((f"{R['fraAntal']} sekkar bjørk eller fleire", "TILBOD – pris per sekk", k.kr(R["pris"])))
 MINST = k.C["levering"]["minstSekkar"]
 
 
@@ -81,11 +83,10 @@ def plakat():
     c.setAuthor("Ved frå Teigen")
 
     # Foto øvst
-    fh = 268
+    fh = 250
     c.drawImage(foto("IMG_4145.jpg", W / fh, 0.42), 0, H - fh, W, fh)
-    for i in range(40):  # mjuk overgang nedst i fotoet
-        c.setFillColor(Color(1, 1, 1, alpha=(i / 40) ** 2 * 0.9))
-        c.rect(0, H - fh + 60 - i * 1.5, W, 1.6, fill=1, stroke=0)
+    c.setFillColor(GRONN)  # rein, grøn kant under fotoet
+    c.rect(0, H - fh - 5, W, 5, fill=1, stroke=0)
     c.setFillColor(GRONN)
     c.roundRect(M, H - 62, 196, 36, 18, fill=1, stroke=0)
     c.drawImage(os.path.join(ROT, "ikon-192.png"), M + 6, H - 58, 28, 28, mask="auto")
@@ -100,7 +101,7 @@ def plakat():
         c.drawCentredString(W - M - 35, H - 49, "UTKAST")
 
     # Overskrift
-    y = H - fh - 40
+    y = H - fh - 60
     c.setFillColor(TEKST)
     c.setFont("Av-H", 54)
     c.drawString(M - 2, y, "Tørr ved til sals")
@@ -113,13 +114,13 @@ def plakat():
     kol = 300
     for i, (namn, detalj, pris) in enumerate(PRISAR):
         rabattrad = R and i == len(PRISAR) - 1
-        c.setFillColor(GRONN if rabattrad else TEKST)
+        c.setFillColor(RAUD if rabattrad else TEKST)
         c.setFont("Av-D", 17)
         c.drawString(M, y, namn)
-        c.setFont("Av-R", 12)
-        c.setFillColor(DEMPET)
+        c.setFont("Av-B" if rabattrad else "Av-R", 12)
+        c.setFillColor(RAUD if rabattrad else DEMPET)
         c.drawString(M, y - 17, detalj)
-        c.setFillColor(GRONN if rabattrad else BRUN)
+        c.setFillColor(RAUD if rabattrad else BRUN)
         c.setFont("Av-H", 25)
         c.drawRightString(M + kol, y - 6, pris)
         c.setStrokeColor(LINJE)
@@ -145,20 +146,39 @@ def plakat():
     c.setFillColor(white)
     c.rect(qx - 4, qy - 4, qs + 8, qs + 8, fill=1, stroke=0)
     qr_eller_plass(c, qx, qy, qs)
-    c.setFillColor(TEKST)
-    c.setFont("Av-B", 15)
-    c.drawCentredString(qx + qs / 2, qy - 24, "Skann og rekn ut pris")
+    c.setFillColor(RAUD)
+    c.setFont("Av-H", 17)
+    c.drawCentredString(qx + qs / 2, qy - 26, "Skann og bestill her!")
     c.setFont("Av-R", 10.5)
     c.setFillColor(DEMPET)
-    c.drawCentredString(qx + qs / 2, qy - 42, "Opne kameraet og peik på koden")
+    c.drawCentredString(qx + qs / 2, qy - 43, "Opne kameraet og peik på koden")
+
+    # Raud «Bestill her!»-lapp på hjørnet av QR-boksen
+    c.saveState()
+    c.translate(qx + qs - 14, qy + qs + 36)  # innanfor utskriftsmargen, klar av sjølve koden
+    c.rotate(-12)
+    c.setFillColor(Color(0, 0, 0, alpha=0.18))
+    c.circle(2, -3, 40, fill=1, stroke=0)
+    c.setFillColor(RAUD)
+    c.circle(0, 0, 40, fill=1, stroke=0)
+    c.setStrokeColor(white)
+    c.setLineWidth(1.5)
+    c.circle(0, 0, 35, fill=0, stroke=1)
+    c.setFillColor(white)
+    c.setFont("Av-H", 15)
+    c.drawCentredString(0, 3, "Bestill")
+    c.drawCentredString(0, -14, "her!")
+    c.restoreState()
 
     # Telefon
     by = 150
     c.setFillColor(GRONN)
     c.roundRect(M, by, W - 2 * M, 62, 18, fill=1, stroke=0)
     c.setFillColor(white)
-    c.setFont("Av-M", 15)
-    c.drawString(M + 22, by + 24, "Ring eller send SMS:")
+    c.setFont("Av-M", 14)
+    c.drawString(M + 22, by + 34, "Ring eller send SMS til")
+    c.setFont("Av-B", 17)
+    c.drawString(M + 22, by + 14, SELGER)
     c.setFont("Av-H", 32)
     c.drawRightString(W - M - 22, by + 19, TELEFON)
 
@@ -182,10 +202,12 @@ def plakat():
         c.rotate(90)
         c.setFillColor(TEKST)
         c.setFont("Av-H", 14)
-        c.drawString(4, 2, TELEFON)
-        c.setFont("Av-D", 9)
+        c.drawString(4, 8, TELEFON)
+        c.setFont("Av-D", 9.5)
+        c.drawString(4, -4, SELGER)
+        c.setFont("Av-D", 8.5)
         c.setFillColor(GRONN)
-        c.drawString(4, -12, "Ved frå Teigen")
+        c.drawString(4, -15, "Ved frå Teigen")
         c.restoreState()
     c.showPage()
     c.save()
@@ -215,15 +237,21 @@ def kort():
             c.drawString(x + 15 * mm, y + kh - 11.8 * mm, "Tørr bjørk og gran · Naustdal")
             c.setFillColor(TEKST)
             c.setFont("Av-H", 12)
-            c.drawString(x + 5 * mm, y + 24 * mm, "Takk for handelen!")
+            c.drawString(x + 5 * mm, y + 25 * mm, "Takk for handelen!")
             c.setFont("Av-R", 8.5)
             c.setFillColor(DEMPET)
-            c.drawString(x + 5 * mm, y + 19.5 * mm, "Bestill igjen – skann koden,")
-            c.drawString(x + 5 * mm, y + 15.8 * mm, "eller ring/send SMS:")
+            c.drawString(x + 5 * mm, y + 20.5 * mm, "Bestill igjen – skann koden,")
+            c.drawString(x + 5 * mm, y + 16.8 * mm, "eller ring/send SMS:")
             c.setFillColor(TEKST)
             c.setFont("Av-H", 13)
-            c.drawString(x + 5 * mm, y + 8.5 * mm, TELEFON)
+            c.drawString(x + 5 * mm, y + 9.5 * mm, TELEFON)
+            c.setFont("Av-D", 8)
+            c.setFillColor(DEMPET)
+            c.drawString(x + 5 * mm, y + 5.5 * mm, SELGER)
             qr_eller_plass(c, x + kw - 29 * mm, y + 5 * mm, 25 * mm)
+            c.setFillColor(RAUD)
+            c.setFont("Av-H", 8.5)
+            c.drawCentredString(x + kw - 16.5 * mm, y + 31.3 * mm, "Bestill her!")
     c.setStrokeColor(LINJE)
     c.setLineWidth(0.5)
     for r in range(6):

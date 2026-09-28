@@ -12,4 +12,5 @@ mkdir -p verktoy/bygg
 qlmanage -t -s 1100 -o verktoy/bygg "leveranse/Plakat A4 – Ved frå Teigen.pdf" >/dev/null 2>&1
 mv "verktoy/bygg/Plakat A4 – Ved frå Teigen.pdf.png" verktoy/bygg/plakat-forhand.png
 python3 verktoy/lag_veiledning.py
+python3 verktoy/lag_huskeliste.py
 echo "✔ Ferdig. Filene ligg i leveranse/. Publiser nettsida med: sh verktoy/publiser.sh \"Nye prisar\""

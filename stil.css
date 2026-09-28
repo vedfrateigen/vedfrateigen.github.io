@@ -162,3 +162,13 @@ textarea.felt { min-height: 80px; resize: vertical; }
 .melding-knapp { background: #fff; color: #231c15; border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 800; cursor: pointer; }
 @media (prefers-color-scheme: dark) { .melding { background: #f3ece2; color: #231c15; } .melding-knapp { background: #231c15; color: #fff; } }
 @media (prefers-reduced-motion: reduce) { .melding { transition: none; } .laster::after { animation: none; } }
+
+/* ---------- Utselt, kundeforslag og avtalt pris ---------- */
+.vare.utselt { opacity: .55; }
+.vare.utselt .vare-detalj { color: var(--rod); font-weight: 700; }
+.kunde-forslag { margin-top: 8px; display: grid; gap: 6px; }
+.kunde-knapp { border: 2px solid var(--gronn); border-radius: 12px; }
+.total-endre { margin-top: 8px; }
+.ferdig-lenker { display: flex; gap: 12px; flex: none; }
+.merkelapp { display: inline-block; background: #c62828; color: #fff; border-radius: 999px; padding: 1px 9px; margin-right: 8px;
+  font-size: .72em; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; vertical-align: 2px; }

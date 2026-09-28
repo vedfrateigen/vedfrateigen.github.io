@@ -65,6 +65,20 @@
   }
 
   const finn = (id) => data.ordre.find((o) => o.id === id);
+
+  function tidlegareKundar() {
+    const sett = new Set();
+    return data.ordre
+      .filter((o) => o.navn && !o.anonym)
+      .sort((a, b) => b.opprettet.localeCompare(a.opprettet))
+      .filter((o) => {
+        const nokkel = o.navn.toLowerCase() + "|" + Ved.telefonLenke(o.telefon || "");
+        if (sett.has(nokkel)) return false;
+        sett.add(nokkel);
+        return true;
+      })
+      .map((o) => ({ navn: o.navn, telefon: o.telefon, levering: o.levering, adresse: o.adresse, punkt: o.punkt, km: o.km, omtrent: o.omtrent }));
+  }
   const erstatt = (ny) => {
     const i = data.ordre.findIndex((o) => o.id === ny.id);
     if (i >= 0) data.ordre[i] = ny; else data.ordre.push(ny);
@@ -196,7 +210,9 @@
         h("summary", { text: "Ferdige og betalte (" + ferdige.length + ")" }),
         ferdige.slice(0, 30).map((o) => h("div", { class: "ferdig-rad" },
           h("span", { text: dato(o.ferdig) + " · " + (o.navn || "Kunde") + " · " + Ved.beskrivAntall(o.antall) + " · " + kr(o.total) + (o.betalt === "vipps" ? " · Vipps" : " · kontant") }),
-          o.anonym ? null : h("a", { class: "lenkeknapp", href: "#/endre/" + o.id }, "Endre")))) : null,
+          o.anonym ? null : h("span", { class: "ferdig-lenker" },
+            o.telefon ? h("a", { class: "lenkeknapp", href: Ved.smsLenke(o.telefon, kvittering(o)) }, "Kvittering") : null,
+            h("a", { class: "lenkeknapp", href: "#/endre/" + o.id }, "Endre"))))) : null,
     );
   }
 
@@ -262,10 +278,17 @@
       { tekst: "Angre", gjor: () => { erstatt(foer); if (lagreData()) hjem(); } });
   }
 
+  function kvittering(o) {
+    return "Kvittering frå " + C.navn + "\n" + Ved.beskrivAntall(o.antall) + (o.levering ? " (med levering)" : "") +
+      "\nBetalt: " + kr(o.total) + " med " + (o.betalt === "vipps" ? "Vipps" : "kontant") + " " +
+      new Date(o.betaltDato || o.ferdig).toLocaleDateString("nn-NO") +
+      "\nTakk for handelen!\nHelsing " + C.selgerFornavn + ", " + C.navn;
+  }
+
   function paaminnelse(o) {
     return "Hei " + fornavn(o.navn) + "! Takk for at du kjøpte ved. Eg ser at " + kr(o.total) +
       " ikkje er betalt enno." + (C.vipps && C.telefon ? " Du kan vippse til " + Ved.visTelefon(C.telefon) + "." : "") +
-      "\nHelsing " + C.navn;
+      "\nHelsing " + C.selgerFornavn + ", " + C.navn;
   }
 
   /* ---------- Ny / endre bestilling ---------- */
@@ -305,6 +328,7 @@
 
     const skjema = Ved.lagSkjema({
       modus: "pappa",
+      kundar: redigerer || fraNettside ? [] : tidlegareKundar(),
       start: fraUtkast || eksisterende || { priser: Ved.naaPriser(), rabatt: C.rabatt },
       vedEndring: (s) => {
         endra = true;
@@ -312,7 +336,9 @@
       },
     });
 
-    function lagre(bliHer) {
+    // betaltNo: "vipps"/"kontant" når kunden er der og har betalt med ein gong (hurtigsal).
+    function lagre(bliHer, betaltNo) {
+      if (betaltNo && skjema.tilstand().levering === null) skjema.settLevering(false);
       const s = skjema.tilstand();
       if (!C.produkter.some((p) => s.antall[p.id] > 0)) {
         Ved.visMelding("Vel kor mange først (trykk på +).");
@@ -334,12 +360,17 @@
         levering: s.levering,
         adresse: s.levering ? s.adresse.trim() : "", punkt: s.levering ? s.punkt : null,
         km: s.levering ? s.km : null, omtrent: s.levering ? s.omtrent : false,
-        manuellFrakt: s.levering ? s.manuellFrakt : null,
+        manuellFrakt: s.levering ? s.manuellFrakt : null, manuellTotal: s.manuellTotal != null ? s.manuellTotal : null,
         ved: b.ved, frakt: s.levering ? b.frakt : 0, total: b.total, fraktUkjent: s.levering === true && b.fraktUkjent,
         notat: s.notat.trim(),
         status: forrige.status || "aapen", ferdig: forrige.ferdig || null,
         betalt: forrige.betalt || null, betaltDato: forrige.betaltDato || null,
       };
+      const nyOrdre = !forrige.id;
+      if (betaltNo) {
+        const naa = new Date().toISOString();
+        Object.assign(ordre, { status: "ferdig", ferdig: ordre.ferdig || naa, betalt: betaltNo, betaltDato: naa });
+      }
       erstatt(ordre);
       if (!lagreData()) return null;
       sikreLagring();
@@ -347,7 +378,14 @@
       lagret = ordre;
       if (!bliHer) {
         tilbake();
-        Ved.visMelding("Lagra ✔");
+        if (betaltNo && nyOrdre) {
+          Ved.visMelding("Selt og betalt ✔", { tekst: "Angre", gjor: () => {
+            data.ordre = data.ordre.filter((o) => o.id !== ordre.id);
+            if (lagreData()) hjem();
+          } });
+        } else {
+          Ved.visMelding(betaltNo ? "Selt og betalt ✔" : "Lagra ✔");
+        }
       }
       return ordre;
     }
@@ -368,7 +406,7 @@
       linjer.push("Totalt: " + kr(b.total) + (b.fraktUkjent ? " + frakt" : ""));
       if (!s.levering) linjer.push("Du kan hente på " + C.henteadresse + ". Gje beskjed når du kjem.");
       linjer.push("Betaling: " + (C.vipps ? "Vipps" + (C.telefon ? " til " + Ved.visTelefon(C.telefon) : "") + " eller kontant." : "kontant."));
-      linjer.push("Helsing " + C.navn);
+      linjer.push("Helsing " + C.selgerFornavn + ", " + C.navn);
       return linjer.join("\n");
     }
 
@@ -407,6 +445,11 @@
         h("button", { class: "knapp primar stor", type: "button", onclick: () => lagre(false) }, ikon("💾"), "Lagre bestillinga"),
         h("button", { class: "knapp", type: "button", onclick: sendPris }, ikon("💬"), "Send prisen til kunden"),
         h("p", { class: "hint", text: "Har du skrive telefonnummeret, opnar det seg ein ferdig SMS. Elles kan du velje Messenger." }),
+        !redigerer ? h("div", { class: "boks-gronn stabel" },
+          h("p", { style: "margin:0" }, h("strong", { text: "Er kunden her og har betalt med ein gong?" })),
+          h("div", { class: "knapp-rad" },
+            C.vipps ? h("button", { class: "knapp", type: "button", onclick: () => lagre(false, "vipps") }, "Betalt med Vipps") : null,
+            h("button", { class: "knapp", type: "button", onclick: () => lagre(false, "kontant") }, "Betalt kontant"))) : null,
         h("button", { class: "lenkeknapp", type: "button", onclick: () => {
           if (endra && !redigerer && !lagret && !confirm("Vil du kaste det du har skrive?")) return;
           if (!redigerer) slettUtkast();
@@ -429,7 +472,7 @@
       "🚚 Levering i Naustdal og Førde frå " + C.levering.minstSekkar + " sekkar – frakt etter avstand" + (eks ? " (" + eks + ")" : "") + ". Andre stader etter avtale.",
       "🏠 Eller hent sjølv i Naustdal.",
       "💳 " + (C.vipps ? "Vipps eller kontant." : "Kontant."), "");
-    if (C.telefon) linjer.push("📱 Send SMS eller ring " + Ved.visTelefon(C.telefon));
+    if (C.telefon) linjer.push("📱 Send SMS eller ring " + C.selgerFornavn + ": " + Ved.visTelefon(C.telefon));
     linjer.push("👉 Rekn ut prisen og bestill her: " + nettside());
     return linjer.join("\n");
   }

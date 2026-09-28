@@ -1,5 +1,13 @@
 # Endringslogg – Vedsal
 
+## 2026-09-28 – Navn, rødt blikkfang, huskeliste og nye snarveier for pappa
+
+- Navnet «Kjell Arne Teigen» står på nettsida («Ring Kjell Arne», «Hent hos Kjell Arne»), i SMS-ene («Hei Kjell Arne!», «Helsing Kjell Arne»), i annonsen og på plakat/kort. Veiledningen er «Laga til Kjell Arne».
+- Plakaten: bildet har en ren kant (kolliderte med overskriften før), rød «Bestill her!»-lapp ved QR-koden, «Skann og bestill her!», og tilbudet i rødt. Kortene har «Bestill her!» over QR-koden. Nettsida har en rød «Tilbod»-merkelapp.
+- Nytt i appen: «Betalt med Vipps/kontant» for kunder som betaler med en gang (hurtigsalg), forslag fra tidligere kunder når han skriver navnet, «Endre totalprisen» (vennepris), «Kvittering» på betalte handler, og «utselt» i `config.js`.
+- Ny «Vedsal – huskeliste».pdf (2 sider): hva han gjør i hver situasjon, også ved bestillinger «på den gamle måten».
+- Tester: 14 enhetstester og 17 klikktester, alle grønne.
+
 ## 2026-09-28 – Svar fra pappa
 
 - Granved: 30 cm (står nå i prislista, annonsen, plakaten og veiledningen).

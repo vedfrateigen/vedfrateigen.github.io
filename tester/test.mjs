@@ -70,6 +70,15 @@ test("minstebestilling for levering: 10 sekkar eller 1 m³", () => {
   assert.equal(V.leveringOk({ m3: 0.5, gran: 2 }), true);
 });
 
+test("avtalt totalpris overstyrer, og veden får resten", () => {
+  const b = V.beregn({ antall: { sekk: 10 }, levering: true, km: 32.9, manuellTotal: 1300 });
+  assert.equal(b.total, 1300);
+  assert.equal(b.frakt, 250);
+  assert.equal(b.ved, 1050);
+  assert.equal(b.avtalt, true);
+  assert.equal(V.beregn({ antall: { sekk: 10 }, levering: false, manuellTotal: null }).total, 1250);
+});
+
 test("tekst på nynorsk", () => {
   assert.equal(V.beskrivAntall({ sekk: 10, gran: 1, m3: 1.5 }), "10 sekkar bjørk og 1 sekk gran og 1,5 m³ laus bjørk");
   assert.equal(V.kr(1658), "1" + nbsp + "658" + nbsp + "kr");

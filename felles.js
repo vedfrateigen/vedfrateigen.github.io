@@ -59,10 +59,14 @@
 
   // Hele regnestykket for en bestilling. s.priser = prisene som gjaldt da bestillingen ble lagret.
   function beregn(s) {
-    const ved = varesum(s.antall, s.priser, rabattFor(s));
+    let ved = varesum(s.antall, s.priser, rabattFor(s));
     let frakt = 0;
     if (s.levering === true) frakt = s.manuellFrakt != null ? s.manuellFrakt : leveringspris(s.km);
-    return { ved, frakt, total: ved + (frakt || 0), fraktUkjent: frakt == null };
+    let total = ved + (frakt || 0);
+    // Pappa kan avtale en annen totalpris (vennepris o.l.). Veden får resten, så summene i oversikten går opp.
+    const avtalt = s.manuellTotal != null && isFinite(s.manuellTotal);
+    if (avtalt) { total = s.manuellTotal; ved = total - (frakt || 0); }
+    return { ved, frakt, total, fraktUkjent: frakt == null, avtalt };
   }
 
   function nyId() {
@@ -340,11 +344,12 @@
   /* ---------- Bestillingsskjemaet (brukes av begge sidene) ---------- */
 
   // modus "kunde": kunden regner ut pris selv. modus "pappa": pappa legger inn en bestilling.
-  function lagSkjema({ modus, start, vedEndring }) {
+  // kundar: tidligere kunder (bare i pappa-appen) – foreslås når han skriver navnet.
+  function lagSkjema({ modus, start, vedEndring, kundar }) {
     const pappa = modus === "pappa";
     const s = Object.assign({
       antall: tomtAntall(), levering: null, adresse: "", punkt: null, km: null, omtrent: false,
-      manuellFrakt: null, navn: "", telefon: "", notat: "", priser: null,
+      manuellFrakt: null, manuellTotal: null, navn: "", telefon: "", notat: "", priser: null,
     }, start ? JSON.parse(JSON.stringify(start)) : {});
     s.antall = Object.assign(tomtAntall(), s.antall);
     let sokNr = 0, avstandNr = 0, sokTimer = null, laster = false;
@@ -355,6 +360,7 @@
 
     // 1. Hva
     const tellere = C.produkter.map((p) => {
+      const utselt = !pappa && (C.utselt || []).includes(p.id);
       const verdi = h("output", { class: "teller-verdi", "aria-live": "polite" });
       const oppdater = () => {
         verdi.textContent = tall(s.antall[p.id]);
@@ -365,14 +371,14 @@
         oppdater();
         endret();
       };
-      const rad = h("div", { class: "vare" },
+      const rad = h("div", { class: "vare" + (utselt ? " utselt" : "") },
         h("div", { class: "vare-tekst" },
           h("div", { class: "vare-navn", text: p.navn }),
-          h("div", { class: "vare-detalj", text: kr(p.pris) + " per " + p.eining })),
+          h("div", { class: "vare-detalj", text: utselt ? "Utselt no – kjem att" : kr(p.pris) + " per " + p.eining })),
         h("div", { class: "teller" },
-          h("button", { type: "button", class: "teller-knapp", "aria-label": "Færre " + p.fleirtal, onclick: () => endre(-1) }, "−"),
+          h("button", { type: "button", class: "teller-knapp", disabled: utselt, "aria-label": "Færre " + p.fleirtal, onclick: () => endre(-1) }, "−"),
           verdi,
-          h("button", { type: "button", class: "teller-knapp", "aria-label": "Fleire " + p.fleirtal, onclick: () => endre(1) }, "+")));
+          h("button", { type: "button", class: "teller-knapp", disabled: utselt, "aria-label": "Fleire " + p.fleirtal, onclick: () => endre(1) }, "+")));
       oppdater();
       return rad;
     });
@@ -411,8 +417,65 @@
       felt("notat", pappa ? "Notat (når, kvar, anna)" : "Når passar det? Anna vi bør vite?",
         { tag: "textarea", rows: "2", maxlength: "300", placeholder: "T.d. laurdag føremiddag, legg ved garasjen" }, "notat"));
 
+    // Tidlegare kundar: skriv dei første bokstavane i namnet, trykk på forslaget.
+    const kundeForslag = h("div", { class: "kunde-forslag", hidden: true });
+    if (pappa && kundar && kundar.length) {
+      const navnFelt = kontakt.querySelector("#pappa-navn");
+      navnFelt.parentElement.append(kundeForslag);
+      navnFelt.addEventListener("input", () => {
+        const q = navnFelt.value.trim().toLowerCase();
+        const treff = q.length < 2 ? [] : kundar.filter((k) => k.navn.toLowerCase().includes(q) && k.navn.toLowerCase() !== q).slice(0, 3);
+        kundeForslag.replaceChildren();
+        kundeForslag.hidden = !treff.length;
+        if (!treff.length) return;
+        kundeForslag.append(h("div", { class: "hint", text: "Tidlegare kunde? Trykk for å fylle inn resten:" }));
+        for (const k of treff) {
+          kundeForslag.append(h("button", { type: "button", class: "forslag-knapp kunde-knapp", onclick: () => brukKunde(k) },
+            h("strong", { text: k.navn }), " · " + (k.levering && k.adresse ? k.adresse : "hentar sjølv") +
+            (k.telefon ? " · " + visTelefon(k.telefon) : "")));
+        }
+      });
+    }
+    function brukKunde(k) {
+      kundeForslag.hidden = true;
+      s.navn = k.navn;
+      s.telefon = k.telefon || "";
+      kontakt.querySelector("#pappa-navn").value = s.navn;
+      kontakt.querySelector("#pappa-telefon").value = s.telefon;
+      if (k.levering === true && k.adresse) {
+        Object.assign(s, { adresse: k.adresse, punkt: k.punkt || null, km: k.km != null ? k.km : null, omtrent: Boolean(k.omtrent), manuellFrakt: null });
+        adresseFelt.value = k.adresse;
+        velgLevering(true);
+        if (s.km == null && s.punkt) velgSted({ tekst: s.adresse, punkt: s.punkt });
+      } else if (k.levering === false) {
+        velgLevering(false);
+      } else {
+        endret();
+      }
+    }
+
     // 5. Oppsummering
     const oppsummering = h("div", { class: "oppsummering", "aria-live": "polite" });
+
+    // Avtalt totalpris (berre pappa). Feltet ligg utanfor oppsummeringa, så det ikkje blir teikna på nytt medan han skriv.
+    const totalFelt = h("input", { type: "number", inputmode: "numeric", min: "0", step: "10", class: "felt felt-kort", id: "pappa-total" });
+    const totalRad = h("div", { class: "frakt-rad", hidden: true },
+      h("label", { for: "pappa-total", text: "Avtalt totalpris i kroner:" }), totalFelt,
+      h("button", { type: "button", class: "lenkeknapp", onclick: () => {
+        s.manuellTotal = null; totalFelt.value = ""; totalRad.hidden = true; totalKnapp.hidden = false; endret();
+      } }, "Bruk vanleg pris"));
+    const totalKnapp = h("button", { type: "button", class: "lenkeknapp", onclick: () => {
+      totalKnapp.hidden = true; totalRad.hidden = false;
+      s.manuellTotal = Math.round(beregn(Object.assign({}, s, { manuellTotal: null })).total);
+      totalFelt.value = s.manuellTotal; endret(); totalFelt.focus(); totalFelt.select();
+    } }, "Avtalt ein annan pris? Endre totalprisen");
+    totalFelt.addEventListener("input", () => {
+      const v = totalFelt.value.trim();
+      s.manuellTotal = v === "" ? null : klamp(v, 0, 1000000);
+      tegnOppsummering();
+      if (vedEndring && brukar) vedEndring(s);
+    });
+    if (s.manuellTotal != null) { totalKnapp.hidden = true; totalRad.hidden = false; totalFelt.value = s.manuellTotal; }
 
     const steg = (nr, tittel, ...innhold) => h("section", { class: "steg" },
       h("h3", { class: "steg-tittel" }, h("span", { class: "steg-nr", "aria-hidden": "true" }, String(nr)), tittel), ...innhold);
@@ -421,7 +484,8 @@
       steg(1, pappa ? "Kva vil kunden ha?" : "Kva vil du ha?", ...tellere),
       steg(2, "Levering eller henting?", h("div", { class: "valg-rad" }, knappLevering, knappHenting), minsteLinje, adresseBoks),
       steg(3, pappa ? "Kven er kunden?" : "Kven er du?", kontakt),
-      oppsummering);
+      oppsummering,
+      pappa ? h("div", { class: "total-endre" }, totalKnapp, totalRad) : null);
 
     function velgLevering(ja) {
       s.levering = ja;
@@ -553,7 +617,7 @@
       }
       const tabell = h("table", { class: "sum-tabell" });
       for (const [a, b2] of rader) tabell.append(h("tr", {}, h("td", { text: a }), h("td", { text: b2 })));
-      tabell.append(h("tr", { class: "sum-total" }, h("td", { text: "Totalt" + (b.fraktUkjent ? " (utan frakt)" : "") }), h("td", { text: kr(b.total) })));
+      tabell.append(h("tr", { class: "sum-total" }, h("td", { text: "Totalt" + (b.avtalt ? " (avtalt pris)" : b.fraktUkjent ? " (utan frakt)" : "") }), h("td", { text: kr(b.total) })));
       oppsummering.append(tabell);
       if (!pappa && s.levering === null) oppsummering.append(h("p", { class: "hint", text: "Vel levering eller henting over." }));
       const rp = rabatt && C.produkter.find((p) => p.id === rabatt.produkt);
@@ -582,6 +646,7 @@
       el,
       tilstand: () => s,
       beregn: () => beregn(s),
+      settLevering: (ja) => velgLevering(ja),
       // Regn ut avstand for bestillinger som har kartpunkt men mangler km (f.eks. fra kundesida).
       async fyllAvstand() {
         if (s.levering === true && s.punkt && s.km == null && s.manuellFrakt == null) {
