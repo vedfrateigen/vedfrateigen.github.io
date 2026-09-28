@@ -26,10 +26,28 @@
     return deler.join(" og ") || "ingenting valt";
   }
 
-  function varesum(antall, priser) {
-    return C.produkter.reduce(
-      (sum, p) => sum + (Number(antall[p.id]) || 0) * (priser && priser[p.id] != null ? priser[p.id] : p.pris), 0);
+  // Pris per enhet. Kjøper kunden rabatt.fraAntal eller flere av rabattproduktet, gjelder rabattprisen for alle.
+  const harRabatt = (p, antall, rabatt) => Boolean(rabatt && rabatt.produkt === p.id && (Number(antall[p.id]) || 0) >= rabatt.fraAntal);
+
+  function einingspris(p, antall, priser, rabatt) {
+    if (harRabatt(p, antall, rabatt)) return rabatt.pris;
+    return priser && priser[p.id] != null ? priser[p.id] : p.pris;
   }
+
+  function varesum(antall, priser, rabatt) {
+    return C.produkter.reduce((sum, p) => sum + (Number(antall[p.id]) || 0) * einingspris(p, antall, priser, rabatt), 0);
+  }
+
+  // Bestillinger lagret før rabatten fantes, har priser men ingen rabatt – de regnes uten rabatt.
+  const rabattFor = (s) => (s.priser ? s.rabatt || null : C.rabatt);
+
+  // Hvor mange sekker bestillingen tilsvarer (løs kubikk regnes om etter volum).
+  function sekkEkvivalent(antall) {
+    return C.produkter.reduce((sum, p) =>
+      sum + (Number(antall[p.id]) || 0) * (p.eining === "m³" ? 1000 / C.literPerSekk : 1), 0);
+  }
+
+  const leveringOk = (antall) => sekkEkvivalent(antall) >= C.levering.minstSekkar - 1e-9;
 
   // Frakt for én levering. null = avtales (ukjent avstand eller for langt).
   function leveringspris(kmEnVei) {
@@ -41,7 +59,7 @@
 
   // Hele regnestykket for en bestilling. s.priser = prisene som gjaldt da bestillingen ble lagret.
   function beregn(s) {
-    const ved = varesum(s.antall, s.priser);
+    const ved = varesum(s.antall, s.priser, rabattFor(s));
     let frakt = 0;
     if (s.levering === true) frakt = s.manuellFrakt != null ? s.manuellFrakt : leveringspris(s.km);
     return { ved, frakt, total: ved + (frakt || 0), fraktUkjent: frakt == null };
@@ -333,7 +351,7 @@
     // vedEndring kalles bare etter at brukeren selv har trykket eller skrevet noe (ikke ved oppstart).
     let brukar = false;
 
-    const endret = () => { tegnOppsummering(); if (vedEndring && brukar) vedEndring(s); };
+    const endret = () => { tegnOppsummering(); tegnMinste(); if (vedEndring && brukar) vedEndring(s); };
 
     // 1. Hva
     const tellere = C.produkter.map((p) => {
@@ -376,6 +394,7 @@
     const fraktRad = h("div", { class: "frakt-rad", hidden: true },
       h("label", { for: "pappa-frakt", text: "Frakt i kroner:" }), fraktFelt,
       h("button", { type: "button", class: "lenkeknapp", onclick: () => { s.manuellFrakt = null; fraktFelt.value = ""; tegnAvstand(); endret(); } }, "Rekn ut på nytt"));
+    const minsteLinje = h("p", { class: "boks-gul", role: "status", hidden: true, style: "margin:12px 0 0" });
     const adresseBoks = h("div", { class: "adresse-boks", hidden: true },
       h("label", { for: modus + "-adresse", class: "etikett", text: pappa ? "Kvar skal veden?" : "Kvar skal veden leverast?" }),
       adresseFelt, forslagListe, avstandLinje, pappa ? fraktRad : null);
@@ -400,7 +419,7 @@
 
     const el = h("div", { class: "skjema" },
       steg(1, pappa ? "Kva vil kunden ha?" : "Kva vil du ha?", ...tellere),
-      steg(2, "Levering eller henting?", h("div", { class: "valg-rad" }, knappLevering, knappHenting), adresseBoks),
+      steg(2, "Levering eller henting?", h("div", { class: "valg-rad" }, knappLevering, knappHenting), minsteLinje, adresseBoks),
       steg(3, pappa ? "Kven er kunden?" : "Kven er du?", kontakt),
       oppsummering);
 
@@ -517,10 +536,12 @@
     function tegnOppsummering() {
       const b = beregn(s);
       const rader = [];
+      const rabatt = rabattFor(s);
       for (const p of C.produkter) {
         if (s.antall[p.id] > 0) {
-          const pris = s.priser && s.priser[p.id] != null ? s.priser[p.id] : p.pris;
-          rader.push([tall(s.antall[p.id]) + " " + (s.antall[p.id] === 1 ? p.eintal : p.fleirtal) + " à " + kr(pris), kr(s.antall[p.id] * pris)]);
+          const pris = einingspris(p, s.antall, s.priser, rabatt);
+          rader.push([tall(s.antall[p.id]) + " " + (s.antall[p.id] === 1 ? p.eintal : p.fleirtal) + " à " + kr(pris) +
+            (harRabatt(p, s.antall, rabatt) ? " (rabatt)" : ""), kr(s.antall[p.id] * pris)]);
         }
       }
       if (s.levering === true) rader.push(["Frakt", b.fraktUkjent ? "etter avtale" : kr(b.frakt)]);
@@ -535,10 +556,26 @@
       tabell.append(h("tr", { class: "sum-total" }, h("td", { text: "Totalt" + (b.fraktUkjent ? " (utan frakt)" : "") }), h("td", { text: kr(b.total) })));
       oppsummering.append(tabell);
       if (!pappa && s.levering === null) oppsummering.append(h("p", { class: "hint", text: "Vel levering eller henting over." }));
+      const rp = rabatt && C.produkter.find((p) => p.id === rabatt.produkt);
+      const n = rp ? s.antall[rp.id] : 0;
+      if (!pappa && rp && n >= rabatt.fraAntal - 5 && n < rabatt.fraAntal) {
+        oppsummering.append(h("p", { class: "hint", text: "Tips: Kjøper du " + rabatt.fraAntal + " " + rp.fleirtal +
+          " eller fleire, kostar kvar sekk berre " + kr(rabatt.pris) + "." }));
+      }
+    }
+
+    // Minstebestilling for levering: kunden må leggje til meir eller hente sjølv; pappa får berre ei åtvaring.
+    function tegnMinste() {
+      const forLite = s.levering === true && C.produkter.some((p) => s.antall[p.id] > 0) && !leveringOk(s.antall);
+      minsteLinje.hidden = !forLite;
+      minsteLinje.textContent = pappa
+        ? "Obs: Minstebestilling for levering er " + C.levering.minstSekkar + " sekkar (eller 1 m³). Du kan lagre likevel."
+        : "Levering krev minst " + C.levering.minstSekkar + " sekkar (eller 1 m³). Legg til fleire – eller vel «Eg hentar sjølv».";
     }
 
     if (s.levering !== null) velgLevering(s.levering); else tegnOppsummering();
     tegnAvstand();
+    tegnMinste();
     for (const hending of ["click", "input"]) el.addEventListener(hending, () => { brukar = true; }, true);
 
     return {
@@ -574,7 +611,8 @@
   }
 
   window.Ved = {
-    C, tall, kr, rund1, tomtAntall, naaPriser, beskrivAntall, varesum, leveringspris, beregn, nyId,
+    C, tall, kr, rund1, tomtAntall, naaPriser, beskrivAntall, harRabatt, einingspris, varesum, sekkEkvivalent, leveringOk,
+    rabattFor, leveringspris, beregn, nyId,
     telefonLenke, visTelefon, smsLenke, kartLenke, klamp, ordreTilParam, paramTilOrdre,
     luftlinjeKm, kjoreavstand, tolkAdresse, sokAdresse, h, visMelding, skjulMelding, kopier, del, lagSkjema,
     registrerOffline, oppdatering,

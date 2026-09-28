@@ -56,6 +56,24 @@
    "side": "pappa.html#i=avbryt1&n=Ola&sekk=1&l=0",
    "hoyde": 844,
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nlet spurt = false; window.confirm = () => { spurt = true; return true; };\n[...document.querySelectorAll('button')].find(b => b.textContent === 'Avbryt').click();\nawait __v(300);\nsjekk(!spurt, 'spurde om å kaste sjølv om ingenting var endra');\nsjekk(!localStorage.getItem('vedsalg.utkast'), 'lagra utkast utan at noko var endra');\n"
+  },
+  {
+   "navn": "t10-minstebestilling",
+   "side": "index.html",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 5; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Levering');\nawait __v(100);\nconst linje = [...document.querySelectorAll('.boks-gul')].find(e => !e.hidden && e.textContent.includes('Levering krev minst 10'));\nsjekk(linje, 'viser ikkje minstebestilling');\n__skriv('#kunde-navn', 'Test');\n__knapp('Bestill på SMS');\nawait __v(200);\nsjekk(document.getElementById('melding').textContent.includes('Levering krev minst 10'), 'stoppa ikkje bestillinga');\nfor (let i = 0; i < 5; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nawait __v(100);\nsjekk(linje.hidden, 'varselet forsvann ikkje ved 10 sekkar');\n"
+  },
+  {
+   "navn": "t11-rabatt",
+   "side": "index.html",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 20; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Eg hentar sjølv');\nawait __v(100);\nconst tekst = document.querySelector('.oppsummering').textContent;\nsjekk(tekst.includes('à 120') && tekst.includes('(rabatt)'), 'rabatt ikkje brukt: ' + tekst);\nsjekk(document.querySelector('.sum-total').textContent.replace(/\\D/g, '') === '2400', 'feil sum: ' + document.querySelector('.sum-total').textContent);\n"
+  },
+  {
+   "navn": "t12-pappa-minste-berre-atvaring",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\ndocument.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp('Levering');\n__skriv('#pappa-navn', 'Nabo');\nawait __v(100);\nsjekk([...document.querySelectorAll('.boks-gul')].some(e => !e.hidden && e.textContent.includes('Du kan lagre likevel')), 'manglar åtvaring for pappa');\n__knapp('Lagre bestillinga');\nawait __v(400);\nsjekk(JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.some(o => o.navn === 'Nabo'), 'pappa fekk ikkje lagre under minstebestilling');\n"
   }
  ]
 }

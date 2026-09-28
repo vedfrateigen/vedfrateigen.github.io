@@ -18,15 +18,19 @@ window.VED = {
     { id: "sekk", navn: "Bjørkeved, 60 l sekk", detalj: "Tørr bjørk, 30 cm", pris: 125,
       eining: "sekk", eintal: "sekk bjørk", fleirtal: "sekkar bjørk", steg: 1, maks: 300,
       annonse: "Bjørkeved i 60 l sekk (tørr, 30 cm)", kortnavn: "Bjørk, 60 l sekk" },
-    { id: "gran", navn: "Granved, 60 l sekk", detalj: "Tørr gran – fin til opptenning", pris: 79,
+    { id: "gran", navn: "Granved, 60 l sekk", detalj: "Tørr gran, 30 cm – fin til opptenning", pris: 79,
       eining: "sekk", eintal: "sekk gran", fleirtal: "sekkar gran", steg: 1, maks: 300,
-      annonse: "Granved i 60 l sekk (tørr, fin til opptenning)", kortnavn: "Gran, 60 l sekk" },
+      annonse: "Granved i 60 l sekk (tørr, 30 cm, fin til opptenning)", kortnavn: "Gran, 60 l sekk" },
     { id: "m3", navn: "Laus kubikk bjørk (m³)", detalj: "Bjørk kappa i 30 cm, laust mål", pris: 2000,
       eining: "m³", eintal: "m³ laus bjørk", fleirtal: "m³ laus bjørk", steg: 0.5, maks: 30,
       annonse: "Laus kubikk bjørk, kappa i 30 cm, per m³", kortnavn: "Laus kubikk, per m³" },
   ],
 
+  // Kjøper kunden «fraAntal» eller flere av produktet, koster hver av dem «pris».
+  rabatt: { produkt: "sekk", fraAntal: 20, pris: 120 },
+
   levering: {
+    minstSekkar: 10, // minstebestilling for levering. Løs kubikk regnes om til sekker (1 m³ ≈ 16,7 sekker à 60 l).
     krPerKm: 3.5,    // per kjørte km, tur/retur. Skatteetatens skattefrie bilsats 2025–2026.
     startpris: 0,    // fast tillegg per levering (f.eks. for tida). 0 = ingen.
     minimum: 100,
@@ -41,6 +45,8 @@ window.VED = {
     { sted: "Førde sentrum", km: 32.5 },
     { sted: "Florø", km: 62.4 },
   ],
+
+  literPerSekk: 60,
 
   // Når kartserveren ikke svarer: luftlinje × denne faktoren gir omtrentlig kjøreavstand.
   veiFaktor: 1.4,

@@ -280,7 +280,7 @@
         h("a", { class: "knapp primar stor", href: "#/", style: "margin-top:16px" }, "Til framsida"));
       return;
     }
-    skjemaSide(Object.assign(o, { priser: Ved.naaPriser() }), "nettside");
+    skjemaSide(Object.assign(o, { priser: Ved.naaPriser(), rabatt: C.rabatt }), "nettside");
   }
 
   function fortsettUtkast() {
@@ -305,7 +305,7 @@
 
     const skjema = Ved.lagSkjema({
       modus: "pappa",
-      start: fraUtkast || eksisterende || { priser: Ved.naaPriser() },
+      start: fraUtkast || eksisterende || { priser: Ved.naaPriser(), rabatt: C.rabatt },
       vedEndring: (s) => {
         endra = true;
         if (!redigerer && !lagret) lagreUtkast({ s, kilde, id: fraNettside ? eksisterende.id : null, tid: Date.now() });
@@ -330,7 +330,7 @@
         opprettet: forrige.opprettet || new Date().toISOString(),
         kilde: forrige.kilde || (fraNettside ? "nettside" : "app"),
         navn: s.navn.trim(), telefon: s.telefon.trim(),
-        antall: Object.assign({}, s.antall), priser: s.priser || Ved.naaPriser(),
+        antall: Object.assign({}, s.antall), priser: s.priser || Ved.naaPriser(), rabatt: Ved.rabattFor(s),
         levering: s.levering,
         adresse: s.levering ? s.adresse.trim() : "", punkt: s.levering ? s.punkt : null,
         km: s.levering ? s.km : null, omtrent: s.levering ? s.omtrent : false,
@@ -359,8 +359,9 @@
       for (const p of C.produkter) {
         const n = s.antall[p.id];
         if (n > 0) {
-          const pris = s.priser && s.priser[p.id] != null ? s.priser[p.id] : p.pris;
-          linjer.push(tall(n) + " " + (n === 1 ? p.eintal : p.fleirtal) + ": " + kr(n * pris));
+          const pris = Ved.einingspris(p, s.antall, s.priser, Ved.rabattFor(s));
+          const rabatt = Ved.harRabatt(p, s.antall, Ved.rabattFor(s)) ? " (rabattpris " + kr(pris) + " per " + p.eining + ")" : "";
+          linjer.push(tall(n) + " " + (n === 1 ? p.eintal : p.fleirtal) + ": " + kr(n * pris) + rabatt);
         }
       }
       if (s.levering) linjer.push("Levering" + (s.adresse.trim() ? " til " + s.adresse.trim() : "") + ": " + (b.fraktUkjent ? "etter avtale" : kr(b.frakt)));
@@ -422,8 +423,10 @@
     const eks = C.eksempler.filter((e) => e.km <= 40).map((e) => e.sted + " " + kr(Ved.leveringspris(e.km))).join(", ");
     const linjer = ["🔥 Tørr ved til sals!", ""];
     for (const p of C.produkter) linjer.push("🪵 " + p.annonse + ": " + kr(p.pris));
+    const rp = C.rabatt && C.produkter.find((p) => p.id === C.rabatt.produkt);
+    if (rp) linjer.push("💰 " + C.rabatt.fraAntal + " " + rp.fleirtal + " eller fleire: " + kr(C.rabatt.pris) + " per " + rp.eining);
     linjer.push("",
-      "🚚 Levering i Naustdal og Førde – frakt etter avstand" + (eks ? " (" + eks + ")" : "") + ". Andre stader etter avtale.",
+      "🚚 Levering i Naustdal og Førde frå " + C.levering.minstSekkar + " sekkar – frakt etter avstand" + (eks ? " (" + eks + ")" : "") + ". Andre stader etter avtale.",
       "🏠 Eller hent sjølv i Naustdal.",
       "💳 " + (C.vipps ? "Vipps eller kontant." : "Kontant."), "");
     if (C.telefon) linjer.push("📱 Send SMS eller ring " + Ved.visTelefon(C.telefon));

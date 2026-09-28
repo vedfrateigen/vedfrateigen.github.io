@@ -37,6 +37,10 @@ M = 40
 URL = sys.argv[1] if len(sys.argv) > 1 else None
 TELEFON = k.telefon()
 PRISAR = [(p["kortnavn"], p["detalj"].lower(), k.kr(p["pris"])) for p in k.C["produkter"]]
+R = k.C.get("rabatt")
+if R:
+    PRISAR.append((f"{R['fraAntal']} sekkar bjørk eller fleire", "rabattpris per sekk", k.kr(R["pris"])))
+MINST = k.C["levering"]["minstSekkar"]
 
 
 def foto(navn, forhold, fokus=0.5, bredde=2400):
@@ -77,7 +81,7 @@ def plakat():
     c.setAuthor("Ved frå Teigen")
 
     # Foto øvst
-    fh = 290
+    fh = 268
     c.drawImage(foto("IMG_4145.jpg", W / fh, 0.42), 0, H - fh, W, fh)
     for i in range(40):  # mjuk overgang nedst i fotoet
         c.setFillColor(Color(1, 1, 1, alpha=(i / 40) ** 2 * 0.9))
@@ -107,30 +111,31 @@ def plakat():
     # Prisar (venstre) og QR (høgre)
     y -= 66
     kol = 300
-    for namn, detalj, pris in PRISAR:
-        c.setFillColor(TEKST)
+    for i, (namn, detalj, pris) in enumerate(PRISAR):
+        rabattrad = R and i == len(PRISAR) - 1
+        c.setFillColor(GRONN if rabattrad else TEKST)
         c.setFont("Av-D", 17)
         c.drawString(M, y, namn)
         c.setFont("Av-R", 12)
         c.setFillColor(DEMPET)
         c.drawString(M, y - 17, detalj)
-        c.setFillColor(BRUN)
+        c.setFillColor(GRONN if rabattrad else BRUN)
         c.setFont("Av-H", 25)
         c.drawRightString(M + kol, y - 6, pris)
         c.setStrokeColor(LINJE)
         c.setLineWidth(1)
         c.line(M, y - 29, M + kol, y - 29)
-        y -= 48
+        y -= 43
     c.setFillColor(TEKST)
     c.setFont("Av-D", 13.5)
-    for linje in ["Levering i Førde og Naustdal – frakt etter avstand",
+    for linje in [f"Levering frå {MINST} sekkar – frakt etter avstand",
                   "Eller hent sjølv: " + k.C["henteadresse"].split(",")[0] + ", Naustdal",
                   "Betal med Vipps eller kontant"]:
         c.setFillColor(GRONN)
         c.circle(M + 5, y + 4.5, 4, fill=1, stroke=0)
         c.setFillColor(TEKST)
         c.drawString(M + 16, y, linje)
-        y -= 21
+        y -= 20
 
     qs = 168
     qx = W - M - qs - 8

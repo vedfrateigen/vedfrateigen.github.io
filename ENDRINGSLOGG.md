@@ -1,5 +1,13 @@
 # Endringslogg – Vedsal
 
+## 2026-09-28 – Svar fra pappa
+
+- Granved: 30 cm (står nå i prislista, annonsen, plakaten og veiledningen).
+- Minstebestilling for levering: 10 sekker eller 1 m³. Kundesida stopper bestillingen under det, pappas app gir bare en advarsel.
+- Rabatt: 20 sekker bjørk eller flere koster 120 kr per sekk (Benjamin bekreftet «20, ikke 21»). Vises i prislista, kalkulatoren, SMS-ene, Facebook-annonsen, plakaten og PDF-en.
+- Ingen faste leveringsdager: «Tidspunkt avtalar vi på SMS».
+- Tester: 13 enhetstester og 12 klikktester, alle grønne.
+
 ## 2026-09-28 – Publisert og kvalitetssikret
 
 - Publisert på https://vedfrateigen.github.io (GitHub-organisasjonen «vedfrateigen»). QR-koden på plakat og kort er kontrollert med Macens strekkodeleser.

@@ -19,6 +19,8 @@ Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det 
 - **Ingen server og ingen database.** Kundesida lagrer ingenting. En bestilling sendes som vanlig SMS fra kundens telefon til pappa.
 - SMS-en inneholder en lenke (`pappa.html#i=…`). Når pappa trykker på den, åpnes bestillingen ferdig utfylt i appen. Prisen regnes alltid ut på nytt i appen, så en tuklet lenke kan ikke endre prisen.
 - Pappa-appen lagrer alt i `localStorage` på telefonen. Den ber om varig lagring (`navigator.storage.persist`) og virker uten dekning (`sw.js`).
+- **Rabatt:** 20 sekker bjørk eller flere → 120 kr per sekk (`rabatt` i `config.js`). Gamle bestillinger uten rabatt endres ikke.
+- **Minstebestilling for levering:** 10 sekker (løs kubikk regnes om: 1 m³ ≈ 16,7 sekker). Kundesida stopper bestillingen, pappa får bare en advarsel og kan lagre likevel.
 - **Frakt:** kjøreavstand fra Teigavegen 131 × 2 (tur/retur) × 3,50 kr, minst 100 kr, rundet opp til nærmeste 50 kr. Satsen er Skatteetatens skattefrie kilometersats (2025–2026). Over 100 km én vei avtales prisen.
 - **Adressesøk:** Kartverkets åpne API-er (`ws.geonorge.no/adresser`, `/stedsnavn`). **Kjøreavstand:** OSRM (`router.project-osrm.org`). Svarer ikke OSRM, brukes luftlinje × 1,4 og prisen merkes «ca.». Pappa kan alltid skrive frakten selv.
 - **Personvern:** navn, telefon og adresse på ferdige og betalte handler slettes fra pappas telefon etter 15 måneder (`slettEtterMaaneder`). Beløpene blir igjen i oversikten.

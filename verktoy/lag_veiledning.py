@@ -422,8 +422,9 @@ def side_ny_bestilling(c):
         "Trykk <b>«Lagre bestillinga»</b>. Ferdig!",
         "Vil du sende prisen til kunden? Trykk «Send prisen til kunden».",
     ]) - 6
-    boks(c, M, y, W - 2 * M, "<b>Vil du ha ein annan pris på frakta?</b> Trykk «Endre frakt» og skriv beløpet – til dømes når "
-         "du leverer til fleire på same tur. Finn ikkje appen adressa, kan du skrive frakta sjølv.", bg=GRONN_L, st=KORT)
+    boks(c, M, y, W - 2 * M, "<b>Appen passar på for deg:</b> Rabatten frå 20 sekkar bjørk blir rekna ut av seg sjølv, og "
+         "appen seier frå viss ei levering er under 10 sekkar (du kan lagre likevel). Vil du ha ein annan pris på frakta, "
+         "trykk «Endre frakt» – til dømes når du leverer til fleire på same tur.", bg=GRONN_L, st=KORT)
 
 
 def side_levert(c, pris_sms):
@@ -510,13 +511,18 @@ def side_priser(c):
     yy = y - 36
     for p in k.C["produkter"]:
         yy = rad(yy, p["kortnavn"], k.kr(p["pris"]), p["detalj"])
+    R = k.C.get("rabatt")
+    if R:
+        yy = rad(yy, f"{R['fraAntal']} sekkar bjørk eller fleire", k.kr(R["pris"]),
+                 "Rabattpris per sekk – appen reknar det ut sjølv")
     yy -= 16
     c.setFont("Av-H", 15)
     c.setFillColor(TEKST)
     c.drawString(M, yy, "Frakt")
     L = k.C["levering"]
     kmsats = f"{L['krPerKm']:.2f}".replace(".", ",")
-    yy = para(c, "Blir rekna ut frå køyrde kilometer tur/retur frå Teigavegen:", M, yy - 10, kol, BROD) - 8
+    yy = para(c, f"<b>Levering frå {L['minstSekkar']} sekkar</b> (eller 1 m³). Tidspunkt avtalar de på SMS. "
+              "Frakta blir rekna ut frå køyrde kilometer tur/retur frå Teigavegen:", M, yy - 10, kol, BROD) - 8
     yy = boks(c, M, yy, kol, f"<b>{kmsats} kr per km</b> · minst {k.kr(L['minimum'])} · "
               f"blir runda opp til næraste {L['rundOppTil']} kr",
               bg=BRUN_L, st=stil("fr", fontSize=12.5, leading=18)) - 20
