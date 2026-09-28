@@ -52,6 +52,18 @@
     if (endret) lagreData();
   }
 
+  // Ny bestilling som ikke er lagret ennå. Overlever Android-tilbakeknappen og at appen lukkes.
+  const UTKAST = "vedsalg.utkast";
+  function lesUtkast() {
+    try { return JSON.parse(localStorage.getItem(UTKAST)); } catch (e) { return null; }
+  }
+  function lagreUtkast(u) {
+    try { localStorage.setItem(UTKAST, JSON.stringify(u)); } catch (e) { /* ikke kritisk */ }
+  }
+  function slettUtkast() {
+    try { localStorage.removeItem(UTKAST); } catch (e) { /* ikke kritisk */ }
+  }
+
   const finn = (id) => data.ordre.find((o) => o.id === id);
   const erstatt = (ny) => {
     const i = data.ordre.findIndex((o) => o.id === ny.id);
@@ -102,13 +114,26 @@
     if (hash && !hash.startsWith("/")) return fraLenke(hash);
     const [side, id] = hash.replace(/^\//, "").split("/");
     if (side === "ny") return skjemaSide(null);
+    if (side === "utkast") return fortsettUtkast();
     if (side === "endre" && finn(id)) return skjemaSide(finn(id));
+    if (side === "endre") {
+      hjem();
+      Ved.visMelding("Bestillinga finst ikkje lenger.");
+      return;
+    }
     if (side === "facebook") return facebookSide();
     if (side === "oversikt") return oversiktSide(Number(id) || new Date().getFullYear());
     if (side === "benjamin") return benjaminSide();
     return hjem();
   }
-  window.addEventListener("hashchange", () => { harNavigert = true; rute(); });
+  const paaFramsida = () => !location.hash || location.hash === "#/";
+  window.addEventListener("hashchange", () => {
+    harNavigert = true;
+    Ved.skjulMelding();
+    // Ny versjon publisert mens appen var open: last inn på nytt når pappa er tilbake på framsida.
+    if (Ved.oppdatering.venter && paaFramsida()) return location.reload();
+    rute();
+  });
 
   /* ---------- Installer på startskjermen ---------- */
 
@@ -141,12 +166,29 @@
       h("h2", { class: "seksjon-tittel" }, tittelTekst, liste.length ? h("span", { class: "antall-merke", text: String(liste.length) }) : null),
       liste.length ? liste.map(lagKort) : h("p", { class: "tom", text: tomTekst }));
 
+    const utkast = lesUtkast();
+    const kopiGammal = data.ordre.length >= 5 &&
+      (!data.sistKopi || Date.now() - new Date(data.sistKopi).getTime() > 30 * 24 * 3600 * 1000);
+
     vis(
       installKnapp(),
+      utkast ? h("div", { class: "boks-gul", style: "margin-bottom:14px" },
+        h("p", { style: "margin:0 0 10px" }, h("strong", { text: "Du har ei bestilling som ikkje er lagra" }),
+          utkast.s && utkast.s.navn ? " (" + utkast.s.navn + ")" : "", "."),
+        h("div", { class: "knapp-rad" },
+          h("a", { class: "knapp primar", href: "#/utkast" }, "Hald fram"),
+          h("button", { class: "knapp", type: "button", onclick: () => {
+            if (!confirm("Kaste bestillinga som ikkje er lagra?")) return;
+            slettUtkast();
+            hjem();
+          } }, "Kast"))) : null,
       h("a", { class: "knapp primar stor", href: "#/ny" }, ikon("＋"), "Ny bestilling"),
       seksjon("Skal leverast eller hentast", aapne, aapenKort,
         "Ingen bestillingar no. Når nokon vil kjøpe ved, trykkjer du «Ny bestilling»."),
       ubetalte.length ? seksjon("Ventar på betaling", ubetalte, ubetaltKort) : null,
+      kopiGammal ? h("div", { class: "boks-gronn", style: "margin-top:24px" },
+        h("p", { style: "margin:0 0 10px", text: "Det er lenge sidan du sende tryggingskopi til Benjamin." }),
+        h("button", { class: "knapp", type: "button", onclick: sendKopi }, ikon("📤"), "Send tryggingskopi no")) : null,
       h("div", { class: "knapp-rad hjem-meny" },
         h("a", { class: "knapp", href: "#/facebook" }, ikon("📣"), "Facebook-annonse"),
         h("a", { class: "knapp", href: "#/oversikt" }, ikon("📊"), "Sal i år")),
@@ -200,6 +242,9 @@
         h("button", { class: "knapp primar", type: "button", onclick: () => fullfor(o, "kontant") }, "Ja, kontant")),
       alleredeLevert ? null : h("button", { class: "knapp", type: "button", onclick: () => fullfor(o, null) }, "Nei, ikkje enno"),
       h("button", { class: "lenkeknapp", type: "button", onclick: hjem }, "Avbryt"));
+    // Et raskt dobbelttrykk på «Ferdig» skal ikke treffe «Ja, …» ved et uhell.
+    panel.style.pointerEvents = "none";
+    setTimeout(() => { panel.style.pointerEvents = ""; }, 400);
     kort.querySelector(".knapp-rad").replaceWith(panel);
   }
 
@@ -211,10 +256,10 @@
     ny.betalt = betalt;
     ny.betaltDato = betalt ? naa : null;
     erstatt(ny);
-    lagreData();
+    if (!lagreData()) { erstatt(foer); return; }
     hjem();
     Ved.visMelding(betalt ? "Ferdig og betalt ✔" : "Flytta til «Ventar på betaling»",
-      { tekst: "Angre", gjor: () => { erstatt(foer); lagreData(); hjem(); } });
+      { tekst: "Angre", gjor: () => { erstatt(foer); if (lagreData()) hjem(); } });
   }
 
   function paaminnelse(o) {
@@ -238,12 +283,34 @@
     skjemaSide(Object.assign(o, { priser: Ved.naaPriser() }), "nettside");
   }
 
-  function skjemaSide(eksisterende, kilde) {
+  function fortsettUtkast() {
+    const u = lesUtkast();
+    if (!u || !u.s) return hjem();
+    skjemaSide(u.id ? Object.assign({}, u.s, { id: u.id }) : null, u.kilde, u.s);
+  }
+
+  // Finnes det alt ei open bestilling frå same telefonnummer? (Kanskje pappa la ho inn etter ein telefon.)
+  function kanskjeSame(o) {
+    if (!o.telefon) return null;
+    const nr = Ved.telefonLenke(o.telefon);
+    return data.ordre.find((x) => x.status === "aapen" && x.id !== o.id && x.telefon && Ved.telefonLenke(x.telefon) === nr) || null;
+  }
+
+  function skjemaSide(eksisterende, kilde, fraUtkast) {
     const fraNettside = kilde === "nettside";
     let lagret = fraNettside ? null : eksisterende;
-    settTittel(fraNettside ? "Frå nettsida" : eksisterende ? "Endre bestilling" : "Ny bestilling", true);
+    const redigerer = Boolean(eksisterende) && !fraNettside;
+    let endra = Boolean(fraUtkast);
+    settTittel(fraNettside ? "Frå nettsida" : redigerer ? "Endre bestilling" : "Ny bestilling", true);
 
-    const skjema = Ved.lagSkjema({ modus: "pappa", start: eksisterende || { priser: Ved.naaPriser() } });
+    const skjema = Ved.lagSkjema({
+      modus: "pappa",
+      start: fraUtkast || eksisterende || { priser: Ved.naaPriser() },
+      vedEndring: (s) => {
+        endra = true;
+        if (!redigerer && !lagret) lagreUtkast({ s, kilde, id: fraNettside ? eksisterende.id : null, tid: Date.now() });
+      },
+    });
 
     function lagre(bliHer) {
       const s = skjema.tilstand();
@@ -276,6 +343,7 @@
       erstatt(ordre);
       if (!lagreData()) return null;
       sikreLagring();
+      slettUtkast();
       lagret = ordre;
       if (!bliHer) {
         tilbake();
@@ -321,20 +389,28 @@
       if (!confirm("Vil du slette bestillinga til " + (eksisterende.navn || "kunden") + "?")) return;
       const foer = kopi(finn(eksisterende.id) || eksisterende);
       data.ordre = data.ordre.filter((o) => o.id !== eksisterende.id);
-      lagreData();
+      if (!lagreData()) { erstatt(foer); return; }
       tilbake();
-      Ved.visMelding("Bestillinga er sletta", { tekst: "Angre", gjor: () => { erstatt(foer); lagreData(); rute(); } });
+      Ved.visMelding("Bestillinga er sletta", { tekst: "Angre", gjor: () => { erstatt(foer); if (lagreData()) rute(); } });
     }
 
+    const same = fraNettside ? kanskjeSame(eksisterende) : null;
     vis(
       fraNettside ? h("div", { class: "boks-gul", style: "margin-bottom:18px" },
-        h("strong", { text: "Bestilling frå nettsida. " }), "Sjekk at alt stemmer, og trykk «Lagre» nedst.") : null,
+        h("strong", { text: "Bestilling frå nettsida. " }), "Sjekk at alt stemmer, og trykk «Lagre bestillinga» nedst.",
+        same ? h("p", { style: "margin:10px 0 0" }, h("strong", { text: "Obs: " }),
+          "Du har alt ei open bestilling frå same telefonnummer (" + (same.navn || "utan namn") +
+          "). Er det same bestillinga, trykk «Avbryt».") : null) : null,
       skjema.el,
       h("div", { class: "skjema-knapper" },
         h("button", { class: "knapp primar stor", type: "button", onclick: () => lagre(false) }, ikon("💾"), "Lagre bestillinga"),
         h("button", { class: "knapp", type: "button", onclick: sendPris }, ikon("💬"), "Send prisen til kunden"),
-        h("p", { class: "hint", text: "«Send prisen» opnar SMS viss du har skrive inn telefonnummer – elles kan du velje Messenger." }),
-        h("button", { class: "lenkeknapp", type: "button", onclick: tilbake }, "Avbryt")),
+        h("p", { class: "hint", text: "Har du skrive telefonnummeret, opnar det seg ein ferdig SMS. Elles kan du velje Messenger." }),
+        h("button", { class: "lenkeknapp", type: "button", onclick: () => {
+          if (endra && !redigerer && !lagret && !confirm("Vil du kaste det du har skrive?")) return;
+          if (!redigerer) slettUtkast();
+          tilbake();
+        } }, "Avbryt")),
       eksisterende && !fraNettside ? h("button", { class: "knapp fare slett", type: "button", onclick: slett }, ikon("🗑"), "Slett bestillinga") : null,
     );
     skjema.fyllAvstand();
@@ -435,17 +511,42 @@
         : h("p", { class: "tom", text: "Ingen ferdige bestillingar i " + aar + "." }),
       h("div", { style: "margin-top:18px" }, mvaBoks),
       h("div", { class: "stabel", style: "margin-top:18px" },
-        h("button", { class: "knapp", type: "button", onclick: () => Ved.del(delTekst()) }, ikon("📤"), "Send oversikta (t.d. til Benjamin)"),
+        h("button", { class: "knapp", type: "button", onclick: () => Ved.del(delTekst()) }, ikon("📤"), "Send oversikta til Benjamin"),
         h("a", { class: "lenkeknapp", href: "#/benjamin" }, "Tryggingskopi og innstillingar")),
     );
   }
 
   /* ---------- Tryggingskopi (for Benjamin) ---------- */
 
+  async function sendKopi() {
+    const filnavn = "vedsal-" + new Date().toISOString().slice(0, 10) + ".json";
+    const json = JSON.stringify({ app: "vedsal", versjon: VERSJON, laget: new Date().toISOString(), ordre: data.ordre }, null, 1);
+    const fil = new File([json], filnavn, { type: "application/json" });
+    const ferdig = () => {
+      data.sistKopi = new Date().toISOString();
+      lagreData();
+      if (paaFramsida()) hjem();
+    };
+    if (navigator.canShare && navigator.canShare({ files: [fil] })) {
+      try {
+        await navigator.share({ files: [fil], title: filnavn });
+        ferdig();
+        Ved.visMelding("Tryggingskopien er send ✔");
+        return;
+      } catch (e) {
+        if (e.name === "AbortError") return;
+      }
+    }
+    const a = h("a", { href: URL.createObjectURL(fil), download: filnavn });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    ferdig();
+    Ved.visMelding("Tryggingskopien er lasta ned.");
+  }
+
   function benjaminSide() {
     settTittel("Tryggingskopi", true);
-    const filnavn = "vedsal-" + new Date().toISOString().slice(0, 10) + ".json";
-    const json = () => JSON.stringify({ app: "vedsal", versjon: VERSJON, laget: new Date().toISOString(), ordre: data.ordre }, null, 1);
     const status = h("p", { class: "hint" });
     if (navigator.storage && navigator.storage.persisted) {
       navigator.storage.persisted().then((ja) => {
@@ -462,8 +563,9 @@
         if (!inn || !Array.isArray(inn.ordre)) throw new Error("feil format");
         const nye = inn.ordre.filter((o) => o && o.id && o.antall);
         if (!confirm("Hente inn " + nye.length + " bestillingar frå tryggingskopien? Like bestillingar blir bytte ut.")) return;
+        const foer = kopi(data);
         nye.forEach(erstatt);
-        lagreData();
+        if (!lagreData()) { data = foer; return; }
         Ved.visMelding("Henta inn " + nye.length + " bestillingar ✔");
       } catch (e) {
         Ved.visMelding("Fila kunne ikkje lesast.");
@@ -474,17 +576,8 @@
       h("p", { text: "Alt i Vedsal ligg berre på denne telefonen. Send ein tryggingskopi til Benjamin av og til." }),
       h("p", { class: "hint", text: data.ordre.length + " bestillingar lagra · versjon " + VERSJON }),
       status,
-      h("button", { class: "knapp primar", type: "button", onclick: async () => {
-        const fil = new File([json()], filnavn, { type: "application/json" });
-        if (navigator.canShare && navigator.canShare({ files: [fil] })) {
-          try { await navigator.share({ files: [fil], title: filnavn }); return; } catch (e) { if (e.name === "AbortError") return; }
-        }
-        const a = h("a", { href: URL.createObjectURL(fil), download: filnavn });
-        document.body.append(a);
-        a.click();
-        a.remove();
-        Ved.visMelding("Tryggingskopien er lasta ned.");
-      } }, ikon("📤"), "Send tryggingskopi"),
+      h("p", { class: "hint", text: "Sist send: " + (data.sistKopi ? new Date(data.sistKopi).toLocaleDateString("nn-NO") : "aldri") }),
+      h("button", { class: "knapp primar", type: "button", onclick: sendKopi }, ikon("📤"), "Send tryggingskopi"),
       h("button", { class: "knapp", type: "button", onclick: () => velgFil.click() }, ikon("📥"), "Hent inn tryggingskopi"),
       velgFil,
       h("button", { class: "knapp fare", type: "button", style: "margin-top:30px", onclick: () => {
@@ -492,6 +585,7 @@
         if (!confirm("Er du heilt sikker? Dette kan ikkje angrast.")) return;
         data = { ordre: [] };
         lagreData();
+        slettUtkast();
         location.replace("#/");
       } }, ikon("🗑"), "Slett alle data")));
   }
@@ -500,5 +594,5 @@
 
   ryddGamle();
   rute();
-  Ved.registrerOffline();
+  Ved.registrerOffline(paaFramsida);
 })();

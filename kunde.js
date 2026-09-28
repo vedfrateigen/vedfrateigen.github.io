@@ -70,7 +70,7 @@
       h("span", { class: "knapp-ikon", "aria-hidden": "true" }, "📞"), "Ring " + Ved.visTelefon(C.telefon))
     : null;
 
-  const kopierLenke = h("p", { class: "hint" }, "Sit du på PC? ",
+  const kopierLenke = h("p", { class: "hint" }, "Opnar ikkje meldingsappen seg, eller sit du på PC? ",
     h("button", { type: "button", class: "lenkeknapp", onclick: async () => {
       const feil = mangler(skjema.tilstand());
       if (feil) { Ved.visMelding(feil); return; }
@@ -103,7 +103,9 @@
       eksempler,
       h("p", { class: "hint", text: "Vi leverer mest i Naustdal og Førde. Florø og andre stader etter avtale. Over " + L.maksKm + " km avtalar vi prisen." })),
     infoKort("🏠", "Hent sjølv",
-      h("p", {}, "Hent på ", h("strong", { text: C.henteadresse }), ". Send SMS først, så avtalar vi tid.")),
+      h("p", {}, "Hent på ", h("strong", { text: C.henteadresse }), ". Send SMS først, så avtalar vi tid."),
+      h("a", { class: "knapp", href: Ved.kartLenke({ punkt: C.start }), target: "_blank", rel: "noopener" },
+        h("span", { class: "knapp-ikon", "aria-hidden": "true" }, "🗺️"), "Vis vegen på kartet")),
     infoKort("💳", "Betaling",
       h("p", { text: (C.vipps ? "Vipps eller kontant" : "Kontant") + " ved levering eller henting." })),
     infoKort("🪵", "Om veden",

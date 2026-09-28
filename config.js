@@ -12,17 +12,18 @@ window.VED = {
   // Henteadressen på kartet (Kartverket). Kjøreavstanden regnes herfra.
   start: { lat: 61.591702, lon: 5.945939 },
 
-  // eining = «per sekk», eintal/fleirtal = etter et tall («1 sekk bjørk», «10 sekkar bjørk»), annonse = linja i Facebook-annonsen.
+  // eining = «per sekk», eintal/fleirtal = etter et tall («1 sekk bjørk», «10 sekkar bjørk»), annonse = linja i Facebook-annonsen,
+  // kortnavn = på plakat, kort og Facebook-bildet. Endre aldri «id» på et produkt som har gamle bestillinger.
   produkter: [
     { id: "sekk", navn: "Bjørkeved, 60 l sekk", detalj: "Tørr bjørk, 30 cm", pris: 125,
       eining: "sekk", eintal: "sekk bjørk", fleirtal: "sekkar bjørk", steg: 1, maks: 300,
-      annonse: "Bjørkeved i 60 l sekk (tørr, 30 cm)" },
+      annonse: "Bjørkeved i 60 l sekk (tørr, 30 cm)", kortnavn: "Bjørk, 60 l sekk" },
     { id: "gran", navn: "Granved, 60 l sekk", detalj: "Tørr gran – fin til opptenning", pris: 79,
       eining: "sekk", eintal: "sekk gran", fleirtal: "sekkar gran", steg: 1, maks: 300,
-      annonse: "Granved i 60 l sekk (tørr, fin til opptenning)" },
+      annonse: "Granved i 60 l sekk (tørr, fin til opptenning)", kortnavn: "Gran, 60 l sekk" },
     { id: "m3", navn: "Laus kubikk bjørk (m³)", detalj: "Bjørk kappa i 30 cm, laust mål", pris: 2000,
       eining: "m³", eintal: "m³ laus bjørk", fleirtal: "m³ laus bjørk", steg: 0.5, maks: 30,
-      annonse: "Laus kubikk bjørk, kappa i 30 cm, per m³" },
+      annonse: "Laus kubikk bjørk, kappa i 30 cm, per m³", kortnavn: "Laus kubikk, per m³" },
   ],
 
   levering: {

@@ -17,6 +17,8 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
+import config as k
+
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BYGG = os.path.join(ROT, "verktoy", "bygg")
 UT = os.path.join(ROT, "leveranse")
@@ -33,10 +35,8 @@ W, H = A4
 M = 40
 
 URL = sys.argv[1] if len(sys.argv) > 1 else None
-TELEFON = "917 50 205"
-PRISAR = [("Bjørk, 60 l sekk", "tørr, 30 cm", "125 kr"),
-          ("Gran, 60 l sekk", "tørr, fin til opptenning", "79 kr"),
-          ("Laus kubikk bjørk", "kappa i 30 cm · pris per m³", "2 000 kr")]
+TELEFON = k.telefon()
+PRISAR = [(p["kortnavn"], p["detalj"].lower(), k.kr(p["pris"])) for p in k.C["produkter"]]
 
 
 def foto(navn, forhold, fokus=0.5, bredde=2400):
@@ -124,7 +124,7 @@ def plakat():
     c.setFillColor(TEKST)
     c.setFont("Av-D", 13.5)
     for linje in ["Levering i Førde og Naustdal – frakt etter avstand",
-                  "Eller hent sjølv: Teigavegen 131, Naustdal",
+                  "Eller hent sjølv: " + k.C["henteadresse"].split(",")[0] + ", Naustdal",
                   "Betal med Vipps eller kontant"]:
         c.setFillColor(GRONN)
         c.circle(M + 5, y + 4.5, 4, fill=1, stroke=0)

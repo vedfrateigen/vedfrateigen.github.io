@@ -9,7 +9,6 @@
   const tall = (n) => tallformat.format(n);
   const kr = (n) => tallformat.format(Math.round(n)) + " kr";
   const rund1 = (n) => Math.round(n * 10) / 10;
-  const produkt = (id) => C.produkter.find((p) => p.id === id);
 
   function tomtAntall() {
     return Object.fromEntries(C.produkter.map((p) => [p.id, 0]));
@@ -180,7 +179,7 @@
   async function sokAdresser(t) {
     const hent = async (sok, ekstra) => {
       const d = await hentJson("https://ws.geonorge.no/adresser/v1/sok?utkoordsys=4258&treffPerSide=40&sok=" +
-        encodeURIComponent(sok) + (ekstra || ""));
+        encodeURIComponent(sok) + (ekstra || ""), 4000);
       return (d.adresser || []).filter((a) => a.representasjonspunkt).map((a) => ({
         tekst: `${a.adressetekst}, ${a.postnummer} ${storForbokstav(a.poststed)}`,
         punkt: { lat: a.representasjonspunkt.lat, lon: a.representasjonspunkt.lon },
@@ -194,19 +193,29 @@
     // Fant vi ikke nummeret, viser vi resten av gata – nærmeste husnummer først.
     forsok.push([t.gate, poststed], [t.gate + "*", poststed], [t.gate, ""], [t.gate + "*", ""], [t.gate, "&fuzzy=true"]);
     const provd = new Set();
+    const start = Date.now();
+    let nettfeil = 0, forsokt = 0;
     for (const [sok, ekstra] of forsok) {
       if (provd.has(sok + ekstra)) continue;
+      if (Date.now() - start > 9000) break;
       provd.add(sok + ekstra);
-      const treff = await hent(sok, ekstra);
-      if (treff.length) return treff;
+      forsokt++;
+      try {
+        const treff = await hent(sok, ekstra);
+        if (treff.length) return treff;
+      } catch (e) {
+        nettfeil++;
+      }
     }
-    return [];
+    const tom = [];
+    tom.nettfeil = forsokt > 0 && nettfeil === forsokt;
+    return tom;
   }
 
   async function sokSteder(t) {
     if (t.nr) return [];
     const d = await hentJson("https://ws.geonorge.no/stedsnavn/v1/navn?utkoordsys=4258&treffPerSide=40&sok=" +
-      encodeURIComponent(t.gate + "*"));
+      encodeURIComponent(t.gate + "*"), 4000);
     return (d.navn || []).filter((n) => STEDSTYPER.has(n.navneobjekttype) && n.representasjonspunkt).map((n) => ({
       tekst: n.skrivemåte + " (" + n.navneobjekttype.replace(" (bygd)", "").replace(" (gardsbruk)", "").toLowerCase() +
         (n.kommuner && n.kommuner[0] ? ", " + n.kommuner[0].kommunenavn : "") + ")",
@@ -219,8 +228,9 @@
   async function sokAdresse(tekst) {
     const t = tolkAdresse(tekst);
     if (t.gate.length < 3) return [];
+    let stedFeil = false;
     const [adresser, steder] = await Promise.all([
-      sokAdresser(t).catch(() => []), sokSteder(t).catch(() => []),
+      sokAdresser(t), sokSteder(t).catch(() => { stedFeil = true; return []; }),
     ]);
     const avstand = (x) => luftlinjeKm(C.start, x.punkt);
     const naer = (x) => avstand(x) <= MAKS_AVSTAND_KM;
@@ -235,9 +245,11 @@
     const stedNaer = steder.filter(naer).sort((a, b) => (lik(b) - lik(a)) || avstand(a) - avstand(b));
     const fremst = stedNaer.filter(lik).slice(0, 2);
     const sett = new Set();
-    return [...fremst, ...adrNaer.slice(0, 6), ...stedNaer.filter((s) => !lik(s)).slice(0, 3)]
+    const liste = [...fremst, ...adrNaer.slice(0, 6), ...stedNaer.filter((s) => !lik(s)).slice(0, 3)]
       .filter((x) => !sett.has(x.tekst) && sett.add(x.tekst))
       .slice(0, 8);
+    liste.nettfeil = !liste.length && Boolean(adresser.nettfeil) && (stedFeil || Boolean(t.nr));
+    return liste;
   }
 
   /* ---------- Små DOM-hjelpere ---------- */
@@ -258,6 +270,11 @@
   }
 
   let meldingTimer = null;
+  function skjulMelding() {
+    const boks = document.getElementById("melding");
+    if (boks) boks.classList.remove("synlig");
+  }
+
   function visMelding(tekst, handling) {
     let boks = document.getElementById("melding");
     if (!boks) {
@@ -313,8 +330,10 @@
     }, start ? JSON.parse(JSON.stringify(start)) : {});
     s.antall = Object.assign(tomtAntall(), s.antall);
     let sokNr = 0, avstandNr = 0, sokTimer = null, laster = false;
+    // vedEndring kalles bare etter at brukeren selv har trykket eller skrevet noe (ikke ved oppstart).
+    let brukar = false;
 
-    const endret = () => { tegnOppsummering(); if (vedEndring) vedEndring(s); };
+    const endret = () => { tegnOppsummering(); if (vedEndring && brukar) vedEndring(s); };
 
     // 1. Hva
     const tellere = C.produkter.map((p) => {
@@ -364,7 +383,7 @@
     // 4. Kontakt
     const felt = (id, etikett, attrs, nokkel) => {
       const inp = h(attrs.tag || "input", Object.assign({ id: modus + "-" + id, class: "felt", value: s[nokkel] }, attrs, { tag: null }));
-      inp.addEventListener("input", () => { s[nokkel] = inp.value; if (vedEndring) vedEndring(s); });
+      inp.addEventListener("input", () => { s[nokkel] = inp.value; if (vedEndring && brukar) vedEndring(s); });
       return h("div", { class: "felt-gruppe" }, h("label", { for: modus + "-" + id, class: "etikett", text: etikett }), inp);
     };
     const kontakt = h("div", { class: "kontakt" },
@@ -434,7 +453,10 @@
     function visForslag(liste, sokeTekst) {
       forslagListe.replaceChildren();
       if (!liste.length) {
-        forslagListe.append(h("li", { class: "forslag-tom", text: "Fann inga adresse for «" + sokeTekst + "». Prøv gatenamn og nummer, t.d. «Storehagen 1»." }));
+        forslagListe.append(h("li", { class: "forslag-tom", text: liste.nettfeil
+          ? "Fekk ikkje kontakt med kartet. Sjekk dekninga og prøv igjen" + (pappa ? " – eller skriv frakt sjølv." : ", eller send bestillinga likevel.")
+          : "Fann inga adresse for «" + sokeTekst + "». Prøv gatenamn og nummer, t.d. «Storehagen 1»." }));
+        if (pappa && liste.nettfeil) { fraktRad.hidden = false; }
       }
       for (const f of liste) {
         const li = h("li", { role: "option" },
@@ -480,7 +502,7 @@
       endret();
       sokTimer = setTimeout(async () => {
         const mitt = ++sokNr;
-        const liste = await sokAdresse(tekst).catch(() => []);
+        const liste = await sokAdresse(tekst).catch(() => Object.assign([], { nettfeil: true }));
         if (mitt === sokNr && adresseFelt.value.trim() === tekst) visForslag(liste, tekst);
       }, 400);
     });
@@ -517,6 +539,7 @@
 
     if (s.levering !== null) velgLevering(s.levering); else tegnOppsummering();
     tegnAvstand();
+    for (const hending of ["click", "input"]) el.addEventListener(hending, () => { brukar = true; }, true);
 
     return {
       el,
@@ -533,15 +556,27 @@
 
   /* ---------- Service worker (gjør at appen virker uten dekning) ---------- */
 
-  function registrerOffline() {
-    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    }
+  // kanLasteNaa(): true når siden kan lastes på nytt uten at noe går tapt (f.eks. på framsida).
+  const oppdatering = { venter: false };
+  function registrerOffline(kanLasteNaa) {
+    if (!("serviceWorker" in navigator) || !(location.protocol === "https:" || location.hostname === "localhost")) return;
+    const haddeEldre = Boolean(navigator.serviceWorker.controller);
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") reg.update().catch(() => {});
+      });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!haddeEldre) return;
+      if (kanLasteNaa && kanLasteNaa()) location.reload();
+      else oppdatering.venter = true;
+    });
   }
 
   window.Ved = {
-    C, tall, kr, rund1, produkt, tomtAntall, naaPriser, beskrivAntall, varesum, leveringspris, beregn, nyId,
+    C, tall, kr, rund1, tomtAntall, naaPriser, beskrivAntall, varesum, leveringspris, beregn, nyId,
     telefonLenke, visTelefon, smsLenke, kartLenke, klamp, ordreTilParam, paramTilOrdre,
-    luftlinjeKm, kjoreavstand, tolkAdresse, sokAdresse, h, visMelding, kopier, del, lagSkjema, registrerOffline,
+    luftlinjeKm, kjoreavstand, tolkAdresse, sokAdresse, h, visMelding, skjulMelding, kopier, del, lagSkjema,
+    registrerOffline, oppdatering,
   };
 })();

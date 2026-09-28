@@ -40,7 +40,10 @@ final class Fotograf: NSObject, WKNavigationDelegate {
     web.navigationDelegate = self
   }
 
-  func webView(_ w: WKWebView, didFinish n: WKNavigation!) {
+  func webView(_ w: WKWebView, didFinish n: WKNavigation!) { ferdigLastet() }
+  func webView(_ w: WKWebView, didFail n: WKNavigation!, withError e: Error) { print("  lastefeil: \(e.localizedDescription)"); ferdigLastet() }
+  func webView(_ w: WKWebView, didFailProvisionalNavigation n: WKNavigation!, withError e: Error) { print("  lastefeil: \(e.localizedDescription)"); ferdigLastet() }
+  func ferdigLastet() {
     lastet?.resume()
     lastet = nil
   }
@@ -58,6 +61,9 @@ final class Fotograf: NSObject, WKNavigationDelegate {
     await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
       lastet = c
       web.loadFileURL(url, allowingReadAccessTo: rot)
+      DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in
+        if self?.lastet != nil { print("  tidsavbrudd ved lasting av \(url.lastPathComponent)"); self?.ferdigLastet() }
+      }
     }
   }
 
@@ -76,7 +82,11 @@ final class Fotograf: NSObject, WKNavigationDelegate {
     if deler.count > 1 { komp.percentEncodedFragment = deler[1] }
     await last(komp.url!, rot: rot)
     try? await Task.sleep(nanoseconds: 300_000_000)
-    if let js = b.js { _ = try await web.callAsyncJavaScript(js, arguments: [:], in: nil, contentWorld: .page) }
+    if let js = b.js {
+      _ = try await web.callAsyncJavaScript("return await Promise.race([(async () => {" + js + "})(), " +
+        "new Promise((_, nei) => setTimeout(() => nei(new Error('tidsavbrudd i testen')), 30000))]);",
+        arguments: [:], in: nil, contentWorld: .page)
+    }
     try? await Task.sleep(nanoseconds: 500_000_000)
     let hoyde: Double
     if let h = b.hoyde { hoyde = h } else {
@@ -116,10 +126,10 @@ func kjor() async {
   do {
     let sti = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "verktoy/skjermbilder.json"
     let oppsett = try JSONDecoder().decode(Oppsett.self, from: Data(contentsOf: URL(fileURLWithPath: sti)))
-    let rot = URL(fileURLWithPath: oppsett.rot, isDirectory: true)
-    let ut = URL(fileURLWithPath: oppsett.ut, isDirectory: true)
+    let rot = URL(fileURLWithPath: oppsett.rot, isDirectory: true).standardizedFileURL
+    let ut = URL(fileURLWithPath: oppsett.ut, isDirectory: true).standardizedFileURL
     try FileManager.default.createDirectory(at: ut, withIntermediateDirectories: true)
-    let forJs = try String(contentsOf: URL(fileURLWithPath: oppsett.forJs), encoding: .utf8)
+    let forJs = try String(contentsOf: URL(fileURLWithPath: oppsett.forJs).standardizedFileURL, encoding: .utf8)
     let f = Fotograf(forJs: forJs)
     for (i, b) in oppsett.bilder.enumerated() {
       do { try await f.ta(b, rot: rot, ut: ut, nr: i) } catch { print("✘ \(b.navn): \(error)") }

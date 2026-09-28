@@ -2,6 +2,11 @@
 
 Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det er pappas språk. Koden og denne fila er på bokmål.
 
+- **Kundeside:** https://vedfrateigen.github.io (QR-koden på plakat og kort peker hit)
+- **Pappa-appen:** https://vedfrateigen.github.io/pappa.html
+- **Kode:** https://github.com/vedfrateigen/vedfrateigen.github.io (organisasjonen «vedfrateigen», eid av kontoen Benjaminn2001)
+- **Oppdatere siden:** gjør endringen, `git commit`, så `git push`. GitHub Pages publiserer på nytt i løpet av ca. ett minutt. `gh` ligger i `~/.local/bin/gh`, og innloggingen er lagret i nøkkelringen.
+
 | Del | Fil | Hvem bruker den |
 |---|---|---|
 | Bestillingsside med priskalkulator | `index.html` + `kunde.js` | Kundene (lenke på Facebook, QR-kode på plakat) |
@@ -18,18 +23,25 @@ Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det 
 - **Adressesøk:** Kartverkets åpne API-er (`ws.geonorge.no/adresser`, `/stedsnavn`). **Kjøreavstand:** OSRM (`router.project-osrm.org`). Svarer ikke OSRM, brukes luftlinje × 1,4 og prisen merkes «ca.». Pappa kan alltid skrive frakten selv.
 - **Personvern:** navn, telefon og adresse på ferdige og betalte handler slettes fra pappas telefon etter 15 måneder (`slettEtterMaaneder`). Beløpene blir igjen i oversikten.
 
-## Endre priser
+## Endre priser (eller telefonnummer, frakt …)
 
-Rediger `produkter` og `levering` i `config.js`, og publiser på nytt. Både kundesida, appen og Facebook-annonsen oppdateres. Gamle bestillinger beholder prisen de ble lagret med. Plakat, kort og PDF må lages på nytt (se under), siden prisene står trykt der.
+1. Rediger `config.js`. **Endre aldri `id` på et produkt** som har gamle bestillinger. Endre bare pris og tekst.
+2. `sh verktoy/lag_trykksaker.sh`: lager Facebook-bildet, skjermbildene, plakaten, kortene og PDF-en på nytt med de nye prisene.
+3. `sh verktoy/publiser.sh "Nye prisar"`: kjører testene, gir appen ny versjon og publiserer. Pappas app henter den nye versjonen neste gang han går til framsida.
+4. Facebook husker gamle forhåndsbilder. Lim inn https://vedfrateigen.github.io på https://developers.facebook.com/tools/debug/ og trykk «Scrape Again».
+
+Gamle bestillinger beholder prisen de ble lagret med. En bestilling fra nettsida regnes ut med *dagens* priser når pappa åpner den. Endres prisene samme dag, kan tallet i kundens SMS derfor avvike litt fra appen. Det er med vilje, så en tuklet lenke ikke kan endre prisen.
 
 ## Sette opp på pappas telefon (Samsung S10+)
 
-1. Åpne `https://<adresse>/pappa.html` i Chrome på telefonen hans.
+1. Åpne https://vedfrateigen.github.io/pappa.html i Chrome på telefonen hans (send lenka på SMS, eller skann QR-koden og bytt til `/pappa.html`).
 2. Trykk den grønne knappen «Legg Vedsal på startskjermen». Finnes ikke knappen: ⋮ → «Legg til på startskjermen».
 3. Legg inn én testbestilling sammen, trykk «Ferdig» → «Ja, Vipps», og vis «Angre».
 4. Tryggingskopi: «Sal i år» → «Tryggingskopi og innstillingar» → «Send tryggingskopi».
 
 ## Verktøy (kjøres på Macen)
+
+De to skriptene over dekker det vanlige. Enkeltverktøyene:
 
 ```bash
 node tester/test.mjs                                   # regnestykker, lenke, adressetolking
@@ -38,7 +50,7 @@ swiftc -O verktoy/skjermbilder.swift -o /tmp/skjermbilder
 /tmp/skjermbilder verktoy/skjermbilder.json            # skjermbilder med demodata
 /tmp/skjermbilder verktoy/skjermbilder-ekstra.json
 /tmp/skjermbilder tester/klikktester.json              # klikktester i WebKit (✘ = feil)
-python3 verktoy/lag_plakat.py https://<adresse>/       # A4-plakat og kort med QR-kode → leveranse/
+python3 verktoy/lag_plakat.py https://vedfrateigen.github.io/   # A4-plakat og kort med QR-kode → leveranse/
 python3 verktoy/lag_veiledning.py                      # «Vedsal – slik fungerer det».pdf → leveranse/
 ```
 

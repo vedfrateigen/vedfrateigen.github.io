@@ -1,7 +1,9 @@
 """Lager nettbildene fra Benjamins foto (verktoy/foto/). GPS og annen EXIF blir IKKE med.
 Kjør: python3 verktoy/lag_bilder.py"""
 import os
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+
+import config as k
 
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FOTO = os.path.join(ROT, "verktoy", "foto")
@@ -46,9 +48,8 @@ og.alpha_composite(ikon, (60, 56))
 d.text((148, 72), "VED FRÅ TEIGEN", font=font(30, 0), fill="white")
 d.text((58, 170), "Tørr ved", font=font(92, 8), fill="white")
 d.text((58, 268), "frå Naustdal", font=font(92, 8), fill="white")
-d.text((62, 400), "Bjørk 60 l sekk  125 kr", font=font(36, 2), fill="white")
-d.text((62, 446), "Gran 60 l sekk  79 kr", font=font(36, 2), fill="white")
-d.text((62, 492), "Laus kubikk  2 000 kr", font=font(36, 2), fill="white")
+for i, p in enumerate(k.C["produkter"][:3]):
+    d.text((62, 400 + i * 46), p["kortnavn"] + "   " + k.kr(p["pris"]), font=font(36, 2), fill="white")
 d.text((62, 560), "Levering i Førde og Naustdal – eller hent sjølv", font=font(26, 7), fill=(225, 238, 227))
 og.convert("RGB").save(os.path.join(ROT, "og-bilde.jpg"), quality=86, optimize=True)
 for f in ("bilder/stabel.jpg", "bilder/sekkar.jpg", "og-bilde.jpg"):

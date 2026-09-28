@@ -17,6 +17,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph
 
+import config as k
+
 ROT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BILDER = os.path.join(ROT, "verktoy", "bilder")
 BYGG = os.path.join(ROT, "verktoy", "bygg")
@@ -472,7 +474,7 @@ def side_kunder(c, kunde_sms):
                  (2, "Kunden trykkjer «Bestill på SMS»."),
                  (3, "<b>Du får ein vanleg SMS</b> med bestillinga (til høgre)."),
                  (4, "Trykk på den blå lenkja nedst i SMS-en. Då opnar bestillinga seg i Vedsal, ferdig utfylt. "
-                     "Sjekk og trykk «Lagre».")]:
+                     "Sjekk og trykk «Lagre bestillinga».")]:
         nummer(c, M + 11, yy - 9, n, r=11)
         yy = para(c, t, M + 30, yy, kol - 30, stil("k", fontSize=11.5, leading=16)) - 10
     boks(c, M, yy - 4, kol, "<b>Du bestemmer.</b> Prisen på nettsida er eit forslag. Du svarar kunden og stadfestar – "
@@ -487,35 +489,41 @@ def side_priser(c):
     pw = 180
     telefon(c, "09-kunde-topp.png", W - M - pw, y, pw)
 
-    def rad(yy, venstre, hoyre):
+    def rad(yy, venstre, hoyre, under=None):
         c.setFont("Av-R", 12)
         c.setFillColor(TEKST)
         c.drawString(M, yy, venstre)
         c.setFont("Av-B", 12)
         c.drawRightString(M + kol, yy, hoyre)
+        if under:
+            c.setFont("Av-R", 9.5)
+            c.setFillColor(DEMPET)
+            c.drawString(M, yy - 12, under)
         c.setStrokeColor(LINJE)
         c.setLineWidth(0.8)
-        c.line(M, yy - 8, M + kol, yy - 8)
-        return yy - 26
+        c.line(M, yy - (20 if under else 8), M + kol, yy - (20 if under else 8))
+        return yy - (38 if under else 26)
 
     c.setFont("Av-H", 15)
     c.setFillColor(TEKST)
     c.drawString(M, y - 10, "Ved")
     yy = y - 36
-    yy = rad(yy, "Bjørk, 60 l sekk (tørr, 30 cm)", "125 kr")
-    yy = rad(yy, "Gran, 60 l sekk (tørr, til opptenning)", "79 kr")
-    yy = rad(yy, "Laus kubikk bjørk, per m³", "2 000 kr")
+    for p in k.C["produkter"]:
+        yy = rad(yy, p["kortnavn"], k.kr(p["pris"]), p["detalj"])
     yy -= 16
     c.setFont("Av-H", 15)
     c.setFillColor(TEKST)
     c.drawString(M, yy, "Frakt")
+    L = k.C["levering"]
+    kmsats = f"{L['krPerKm']:.2f}".replace(".", ",")
     yy = para(c, "Blir rekna ut frå køyrde kilometer tur/retur frå Teigavegen:", M, yy - 10, kol, BROD) - 8
-    yy = boks(c, M, yy, kol, "<b>3,50 kr per km</b> · minst 100 kr · blir runda opp til næraste 50 kr",
+    yy = boks(c, M, yy, kol, f"<b>{kmsats} kr per km</b> · minst {k.kr(L['minimum'])} · "
+              f"blir runda opp til næraste {L['rundOppTil']} kr",
               bg=BRUN_L, st=stil("fr", fontSize=12.5, leading=18)) - 20
-    yy = rad(yy, "Naustdal sentrum (21 km)", "150 kr")
-    yy = rad(yy, "Førde sentrum (33 km)", "250 kr")
-    yy = rad(yy, "Florø (62 km)", "450 kr")
-    yy = para(c, "<b>Kvifor 3,50 kr?</b> Det er satsen Skatteetaten reknar som bilkostnad (skattefri kilometersats 2026). "
+    for e in k.C["eksempler"]:
+        pris = k.frakt(e["km"])
+        yy = rad(yy, f"{e['sted']} ({int(e['km'] + 0.5)} km)", k.kr(pris) if pris else "etter avtale")
+    yy = para(c, f"<b>Kvifor {kmsats} kr?</b> Det er satsen Skatteetaten reknar som bilkostnad (skattefri kilometersats 2026). "
               "Han dekkjer bil og drivstoff – ikkje tida di. Vil du ha betalt for tida òg, kan vi leggje til eit fast beløp.",
               M, yy - 6, kol, KORT) - 14
     boks(c, M, yy, kol, "Vil du endre ein pris? Sei frå til Benjamin, så blir han endra både i appen og på nettsida.",
@@ -538,7 +546,7 @@ def side_facebook_oversikt(c):
          "opne Facebook, hald fingeren i tekstfeltet og vel <b>«Lim inn»</b>. Ta gjerne med eit bilete av veden.",
          M, y - 10, kol, KORT)
     para(c, "Sjå kor mykje du har selt, kor mange sekkar, frakt og kven som ikkje har betalt. Nedst ser du kor nær du er "
-         "<b>50 000 kr – grensa for moms</b>. «Send oversikta» sender tala til Benjamin, til dømes når skattemeldinga "
+         "<b>50 000 kr – grensa for moms</b>. «Send oversikta til Benjamin» sender tala, til dømes når skattemeldinga "
          "skal fyllast ut.", M + kol + 30, y - 10, kol, KORT)
 
 
@@ -597,6 +605,7 @@ def side_ideer(c):
         pw_ = 100
         c.setFillColor(Color(0, 0, 0, alpha=0.1))
         c.rect(M + 23, y - fh + 15, pw_, pw_ * 1.414, fill=1, stroke=0)
+        c.setFillAlpha(1)  # ellers blir biletet like gjennomsiktig som skuggen
         c.drawImage(plakat_bilde, M + 20, y - fh + 18, pw_, pw_ * 1.414)
         c.setStrokeColor(LINJE)
         c.rect(M + 20, y - fh + 18, pw_, pw_ * 1.414, fill=0, stroke=1)
@@ -605,14 +614,14 @@ def side_ideer(c):
     tx = M + 150
     tw = bw - 170
     yy = para(c, "A4-plakat med QR-kode", tx, y - 16, tw, stil("pt", fontName="Av-H", fontSize=16, leading=20))
-    yy = para(c, "Heng han på oppslagstavla i butikken, på bensinstasjonen og grendahuset – eller ta han med på bygdemeet. "
+    yy = para(c, "Heng han på oppslagstavla i butikken, på bensinstasjonen og grendahuset – eller ta han med på bygdetreff og marknader. "
               "Folk skannar koden med mobilkameraet og kjem rett til bestillingssida. Nedst er det lappar med "
               "telefonnummeret som folk kan rive av.", tx, yy - 4, tw, KORT)
     para(c, "<font color='#8b4a1c'><b>Ferdig laga · Gratis å skrive ut · Spør eigaren av tavla først</b></font>",
          tx, yy - 6, tw, stil("tg", fontSize=10, leading=14))
     y -= fh + 14
     ideer = [
-        ("Kort i kvar leveranse", "Eit lite kort med QR-kode: «Bestill igjen – skann her». Gjer det lett å kjøpe av deg neste gong.", "Billeg · Lite arbeid"),
+        ("Kort i kvar leveranse", "Eit lite kort med QR-kode: «Takk for handelen! Bestill igjen – skann koden». Gjer det lett å kjøpe av deg neste gong.", "Ferdig laga · Billeg å skrive ut"),
         ("Facebook i sesongen", "Legg ut annonsen i lokale kjøp-og-sal-grupper når fyringssesongen startar, og når det blir kaldt.", "Gratis · Ferdig tekst i appen"),
         ("Opptenningspakke", "Sel gran saman med bjørk: «10 sekkar bjørk + 1 sekk gran». Enkelt meirsal til kundar som alt handlar.", "Meir sal per kunde"),
         ("Synleg på Google Maps", "Ei gratis Google-oppføring gjer at du dukkar opp når folk søkjer etter ved i Førde og Naustdal.", "Gratis · Éin gong"),
@@ -645,7 +654,8 @@ def side_sporsmal(c):
     for sp, sv in [
         ("Kostar det noko?", "Nei. Ingen abonnement, ingen reklame og inga innlogging."),
         ("Kven ser kundane mine?", "Berre du. Alt blir lagra på telefonen din – ikkje på internett."),
-        ("Kva om eg mistar telefonen?", "Send ein tryggingskopi til Benjamin av og til: «Sal i år» › «Tryggingskopi og innstillingar» › «Send tryggingskopi»."),
+        ("Kva om eg går ut før eg har lagra?", "Ingen fare. Det du har skrive, blir teke vare på. På framsida trykkjer du «Hald fram»."),
+        ("Kva om eg mistar telefonen?", "Send ein tryggingskopi til Benjamin av og til. Appen minner deg på det – eller gå til «Sal i år» › «Tryggingskopi og innstillingar»."),
         ("Verkar det utan dekning?", "Ja, appen opnar seg. Adressesøk treng nett – utan dekning skriv du frakta sjølv."),
         ("Må eg bruke alt?", "Nei. Bruk det du har nytte av. Du kan framleis ta imot bestillingar på telefon som før."),
         ("Kva med moms og skatt?", "Sel du for mindre enn 50 000 kr i løpet av 12 månader, treng du ikkje registrere deg for moms. "
@@ -654,7 +664,7 @@ def side_sporsmal(c):
         y = para(c, sp, M, y, kol, stil("sp", fontName="Av-D", fontSize=13.5, leading=18)) - 2
         y = para(c, sv, M, y, kol, BROD) - 14
     y -= 4
-    nh = 196
+    nh = 170
     c.setFillColor(GRONN)
     c.roundRect(M, y - nh, kol, nh, 16, fill=1, stroke=0)
     hvit = stil("hv", fontSize=12.5, leading=18, textColor=white)
