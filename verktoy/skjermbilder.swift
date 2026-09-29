@@ -11,6 +11,7 @@ struct Bilde: Decodable {
   let js: String?           // kjøres etter lasting (kan bruke await)
   let klipp: String?        // CSS-velger: ta bare bilde av dette elementet
   let etterJs: String?      // kjøres etter bildet (f.eks. trykke «Send» for å fange SMS-teksten)
+  let mork: Bool?           // true = mørk modus (som en telefon med mørkt tema)
 }
 struct Oppsett: Decodable {
   let rot: String
@@ -75,6 +76,7 @@ final class Fotograf: NSObject, WKNavigationDelegate {
 
   func ta(_ b: Bilde, rot: URL, ut: URL, nr: Int) async throws {
     let bredde = b.bredde ?? 390
+    web.appearance = NSAppearance(named: (b.mork ?? false) ? .darkAqua : .aqua)
     await storrelse(bredde, b.hoyde ?? 844)
     let deler = b.side.split(separator: "#", maxSplits: 1).map(String.init)
     var komp = URLComponents(url: rot.appendingPathComponent(deler[0]), resolvingAgainstBaseURL: false)!

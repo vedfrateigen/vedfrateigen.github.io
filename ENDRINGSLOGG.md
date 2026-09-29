@@ -1,5 +1,14 @@
 # Endringslogg – Vedsal
 
+## 2026-09-29 – Påminning neste haust, bilete i annonsen, målingar
+
+- Påminning neste haust, med samtykke (markedsføringsloven § 15): avkryssing på kundesida (aldri forhåndsavkrysset) og i pappas skjema. Samtykket følger med SMS-lenka og lagres med dato. «Sal i år» › «Påminning neste haust» viser kundene med «Send» (ferdig SMS med «svar NEI») og «Vil ikkje ha». Framsida minner om det 15. aug.–31. okt., men bare for kunder som ikke har handlet de siste 150 dagene.
+- Facebook-annonsen: velg bilde («Med prisar», «Sekkane», «Vedstabelen») og trykk «Del på Facebook». Teksten kopieres og bildet deles i samme trykk. Bildene virker uten dekning.
+- «Sal i år» viser hvor bestillingene kom fra: nettsida, telefon/Facebook og kjøpt på staden (hurtigsalg lagres med kilde «innom»). Dette er målingen for testperioden.
+- Retta: produktbildet på kundesida ble høyt og smalt, fordi `height`-attributtet overstyrte `aspect-ratio`. Har nå `height: auto` og en regresjonstest.
+- Huskeliste og veiledning er oppdatert. «Slik skal appen se ut.png» viser riktig app (lys/mørk) mot kundesida.
+- Tester: 15 enhetstester og 25 klikktester, alle grønne.
+
 ## 2026-09-28 – Navn, rødt blikkfang, huskeliste og nye snarveier for pappa
 
 - Navnet «Kjell Arne Teigen» står på nettsida («Ring Kjell Arne», «Hent hos Kjell Arne»), i SMS-ene («Hei Kjell Arne!», «Helsing Kjell Arne»), i annonsen og på plakat/kort. Veiledningen er «Laga til Kjell Arne».
