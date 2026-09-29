@@ -1,7 +1,7 @@
 /* Gjør at Vedsal åpner seg også uten dekning. Henter alltid nyeste versjon når det er nett. */
-const CACHE = "vedsal-2026-09-28-1848";
+const CACHE = "vedsal-2026-09-29-1456";
 const FILER = ["./", "index.html", "pappa.html", "stil.css", "config.js", "felles.js", "kunde.js", "pappa.js",
-  "ikon.svg", "ikon-192.png", "ikon-180.png", "manifest.webmanifest"];
+  "ikon.svg", "ikon-192.png", "ikon-180.png", "manifest.webmanifest", "og-bilde.jpg", "bilder/sekkar.jpg", "bilder/stabel.jpg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILER)).then(() => self.skipWaiting()));

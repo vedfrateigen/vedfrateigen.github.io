@@ -130,7 +130,8 @@ def side2(c):
         ("Ingen dekning", "Appen verkar likevel. Adressa blir ikkje funnen – skriv frakta sjølv."),
         ("Tomt for gran eller bjørk", "Sei frå til Benjamin – då står det «Utselt no» på nettsida."),
         ("Appen minner om tryggingskopi", "«Send tryggingskopi no» › vel Benjamin (SMS eller Messenger)."),
-        ("Du vil ha ut ei annonse", "«Facebook-annonse» › «Kopier teksten» › lim inn på Facebook."),
+        ("Du vil ha ut ei annonse", "«Facebook-annonse» › vel bilete › «Del på Facebook» › vel Facebook › lim inn teksten."),
+        ("Kunden vil ha påminning neste haust", "Kryss av i bestillinga (spør først). Neste haust minner appen deg på å sende SMS."),
     ]
     kol1 = 190
     kol2 = W - 2 * M - kol1 - 16

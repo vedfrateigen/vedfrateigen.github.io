@@ -119,6 +119,7 @@
       if (o.km != null) p.set("k", o.km);
     } else if (o.levering === false) p.set("l", "0");
     if (o.notat) p.set("x", o.notat);
+    if (o.paaminning) p.set("p", "1");
     return p.toString();
   }
 
@@ -138,7 +139,7 @@
       id, navn: kort("n", 80), telefon: kort("t", 20), antall,
       levering: p.get("l") === "1" ? true : p.get("l") === "0" ? false : null,
       adresse: kort("a", 150), punkt, km: p.has("k") && isFinite(k) && k >= 0 && k < 2000 ? rund1(k) : null,
-      notat: kort("x", 300),
+      notat: kort("x", 300), paaminning: p.get("p") === "1",
     };
   }
 
@@ -349,7 +350,7 @@
     const pappa = modus === "pappa";
     const s = Object.assign({
       antall: tomtAntall(), levering: null, adresse: "", punkt: null, km: null, omtrent: false,
-      manuellFrakt: null, manuellTotal: null, navn: "", telefon: "", notat: "", priser: null,
+      manuellFrakt: null, manuellTotal: null, navn: "", telefon: "", notat: "", priser: null, paaminning: false,
     }, start ? JSON.parse(JSON.stringify(start)) : {});
     s.antall = Object.assign(tomtAntall(), s.antall);
     let sokNr = 0, avstandNr = 0, sokTimer = null, laster = false;
@@ -416,6 +417,15 @@
       felt("telefon", pappa ? "Telefonnummer (viss du har det)" : "Mobilnummeret ditt", { type: "tel", inputmode: "tel", autocomplete: pappa ? "off" : "tel", maxlength: "20" }, "telefon"),
       felt("notat", pappa ? "Notat (når, kvar, anna)" : "Når passar det? Anna vi bør vite?",
         { tag: "textarea", rows: "2", maxlength: "300", placeholder: "T.d. laurdag føremiddag, legg ved garasjen" }, "notat"));
+
+    // Samtykke til éin SMS neste haust (marknadsføringslova § 15: aldri førehandsavkryssa).
+    const paaminningBoks = h("input", { type: "checkbox", id: modus + "-paaminning", class: "avkryss" });
+    paaminningBoks.checked = Boolean(s.paaminning);
+    paaminningBoks.addEventListener("change", () => { s.paaminning = paaminningBoks.checked; if (vedEndring && brukar) vedEndring(s); });
+    kontakt.append(h("label", { class: "avkryss-rad", for: modus + "-paaminning" }, paaminningBoks,
+      h("span", { text: pappa
+        ? "Kunden vil ha ein SMS når det er tid for ved neste haust (spør først)."
+        : "Ja takk, send meg ein SMS når det er tid for ved neste haust. Du kan seie nei takk når som helst." })));
 
     // Tidlegare kundar: skriv dei første bokstavane i namnet, trykk på forslaget.
     const kundeForslag = h("div", { class: "kunde-forslag", hidden: true });

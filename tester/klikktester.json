@@ -104,6 +104,54 @@
    "side": "index.html#utselt=gran",
    "hoyde": 844,
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst rad = [...document.querySelectorAll('.vare')].find(r => r.textContent.includes('Granved'));\nsjekk(rad && rad.classList.contains('utselt') && rad.querySelector('[aria-label=\"Fleire sekkar gran\"]').disabled, 'gran er ikkje merka utselt i skjemaet');\nsjekk([...document.querySelectorAll('.prisrad')].some(r => r.textContent.includes('Granved') && r.textContent.includes('Utselt no')), 'prislista viser ikkje utselt');\n"
+  },
+  {
+   "navn": "t18-kunde-samtykke",
+   "side": "index.html",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst boks = document.querySelector('#kunde-paaminning');\nsjekk(boks && !boks.checked, 'avkryssinga manglar eller er førehandsavkryssa');\nfor (let i = 0; i < 2; i++) document.querySelector('[aria-label=\"Fleire sekkar gran\"]').click();\n__knapp('Eg hentar sjølv');\n__skriv('#kunde-navn', 'Samtykke Testesen');\n__skriv('#kunde-telefon', '000 00 000');\nboks.click();\nlet kopiert = '';\nVed.kopier = async (t) => { kopiert = t; return true; };\n__knapp('Kopier bestillinga');\nawait __v(200);\nsjekk(kopiert.includes('Påminning neste haust: ja takk') && kopiert.includes('&p=1'), 'samtykket kom ikkje med i SMS-en: ' + kopiert);\n"
+  },
+  {
+   "navn": "t19-paaminning-liste",
+   "side": "pappa.html#i=samt1&n=Samtykke+Testesen&t=00000000&gran=2&l=0&p=1",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nsjekk(document.querySelector('#pappa-paaminning').checked, 'samtykket frå lenka vart ikkje vist');\n__knapp('Lagre bestillinga');\nawait __v(400);\nconst o = JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.find(x => x.id === 'samt1');\nsjekk(o && o.paaminning === true && o.samtykkeDato, 'samtykket vart ikkje lagra med dato');\nlocation.hash = '#/paaminning';\nawait __v(400);\nconst kort = [...document.querySelectorAll('.ordre')].find(k => k.textContent.includes('Samtykke Testesen'));\nsjekk(kort, 'kunden står ikkje på påminningslista');\nconst lenke = [...kort.querySelectorAll('a')].find(a => a.textContent.includes('Send'));\nconst tekst = decodeURIComponent(lenke.getAttribute('href').split('body=')[1]);\nsjekk(tekst.includes('svar NEI') && tekst.includes('Helsing Kjell Arne') && tekst.includes('Bestill her'), 'feil påminningstekst: ' + tekst);\nsjekk(![...document.querySelectorAll('.ordre')].some(k => k.textContent.includes('Kari Nordmann')), 'kundar utan samtykke kom med på lista');\nwindow.confirm = () => true;\n[...kort.querySelectorAll('button')].find(b => b.textContent.includes('Vil ikkje ha')).click();\nawait __v(300);\nsjekk(![...document.querySelectorAll('.ordre')].some(k => k.textContent.includes('Samtykke Testesen')), 'avmelding verka ikkje');\n"
+  },
+  {
+   "navn": "t20-kjelder-i-oversikta",
+   "side": "pappa.html#/ny",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nlocation.hash = '#/oversikt';\nawait __v(300);\nconst tal = () => Number((document.body.textContent.match(/Kjøpt på staden: (\\d+)/) || [0, 0])[1]);\nconst tidlegare = tal();\nlocation.hash = '#/ny';\nawait __v(300);\ndocument.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Betalt kontant');\nawait __v(400);\nlocation.hash = '#/oversikt';\nawait __v(300);\nsjekk(tal() === tidlegare + 1, 'hurtigsal vart ikkje talt som kjøpt på staden (' + tidlegare + ' → ' + tal() + ')');\n"
+  },
+  {
+   "navn": "t21a-legg-inn-samtykke",
+   "side": "pappa.html#/",
+   "hoyde": 844,
+   "js": "\nconst d = JSON.parse(localStorage.getItem('vedsalg.v1'));\nconst gamal = new Date(Date.now() - 300 * 24 * 3600 * 1000).toISOString();\nd.ordre.push({ id: 'p-gamal', opprettet: gamal, kilde: 'app', navn: 'Gamal Kunde', telefon: '11111111', antall: { sekk: 10, gran: 0, m3: 0 }, levering: false, ved: 1250, frakt: 0, total: 1250, status: 'ferdig', ferdig: gamal, betalt: 'vipps', paaminning: true, samtykkeDato: gamal });\nd.ordre.push({ id: 'p-ny', opprettet: new Date().toISOString(), kilde: 'nettside', navn: 'Ny Kunde', telefon: '22222222', antall: { sekk: 10, gran: 0, m3: 0 }, levering: false, ved: 1250, frakt: 0, total: 1250, status: 'aapen', ferdig: null, betalt: null, paaminning: true, samtykkeDato: new Date().toISOString() });\nlocalStorage.setItem('vedsalg.v1', JSON.stringify(d));\n"
+  },
+  {
+   "navn": "t21b-paaminning-ikkje-same-sesong",
+   "side": "pappa.html#/paaminning",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst tekst = (n) => ([...document.querySelectorAll('.ordre')].find(k => k.textContent.includes(n)) || {}).textContent || '';\nsjekk(tekst('Gamal Kunde').includes('Klar for påminning'), 'gamal kunde er ikkje klar: ' + tekst('Gamal Kunde'));\nsjekk(tekst('Ny Kunde').includes('vent til neste haust'), 'ny kunde er feilaktig klar: ' + tekst('Ny Kunde'));\n"
+  },
+  {
+   "navn": "t21c-framsida-berre-klare",
+   "side": "pappa.html#/",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst d = new Date(); const iSesong = (d.getMonth() === 7 && d.getDate() >= 15) || d.getMonth() === 8 || d.getMonth() === 9;\nconst banner = [...document.querySelectorAll('.boks-gul')].find(b => b.textContent.includes('har bede om ein SMS'));\nif (iSesong) sjekk(banner && banner.textContent.includes('1 kundar'), 'framsida skal telje berre 1 klar kunde: ' + (banner ? banner.textContent : 'ingen'));\n"
+  },
+  {
+   "navn": "t22-facebook-bilete",
+   "side": "pappa.html#/facebook",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst val = [...document.querySelectorAll('.bilete-val')];\nsjekk(val.length === 3 && val[0].getAttribute('aria-pressed') === 'true', 'manglar biletval');\nval[1].click();\nsjekk(val[1].getAttribute('aria-pressed') === 'true' && val[0].getAttribute('aria-pressed') === 'false', 'kan ikkje velje bilete');\nawait __v(600);\nconst bilete = [...document.querySelectorAll('.bilete-val img')];\nsjekk(bilete.every(b => b.complete && b.naturalWidth > 0), 'eit bilete lastar ikkje');\nsjekk([...document.querySelectorAll('button')].some(b => b.textContent.includes('Del på Facebook')), 'manglar «Del på Facebook»');\nsjekk(document.querySelector('.annonse').value.includes('Kjell Arne'), 'annonseteksten manglar namnet');\n"
+  },
+  {
+   "navn": "t23-bilete-ikkje-strekt",
+   "side": "index.html",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst img = document.querySelector('.foto');\nimg.scrollIntoView(); await __v(500);\nconst r = img.getBoundingClientRect();\nsjekk(r.width > 0 && Math.abs(r.width / r.height - 4 / 3) < 0.05, 'produktbiletet har feil form: ' + Math.round(r.width) + '×' + Math.round(r.height));\n"
   }
  ]
 }

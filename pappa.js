@@ -138,6 +138,7 @@
     if (side === "facebook") return facebookSide();
     if (side === "oversikt") return oversiktSide(Number(id) || new Date().getFullYear());
     if (side === "benjamin") return benjaminSide();
+    if (side === "paaminning") return paaminningSide();
     return hjem();
   }
   const paaFramsida = () => !location.hash || location.hash === "#/";
@@ -181,6 +182,9 @@
       liste.length ? liste.map(lagKort) : h("p", { class: "tom", text: tomTekst }));
 
     const utkast = lesUtkast();
+    const ventarPaaminning = paaminningsKundar().filter((k) => k.klar).length;
+    const d = new Date();
+    const iSesong = (d.getMonth() === 7 && d.getDate() >= 15) || d.getMonth() === 8 || d.getMonth() === 9;
     const kopiGammal = data.ordre.length >= 5 &&
       (!data.sistKopi || Date.now() - new Date(data.sistKopi).getTime() > 30 * 24 * 3600 * 1000);
 
@@ -200,6 +204,10 @@
       seksjon("Skal leverast eller hentast", aapne, aapenKort,
         "Ingen bestillingar no. Når nokon vil kjøpe ved, trykkjer du «Ny bestilling»."),
       ubetalte.length ? seksjon("Ventar på betaling", ubetalte, ubetaltKort) : null,
+      iSesong && ventarPaaminning ? h("div", { class: "boks-gul", style: "margin-top:24px" },
+        h("p", { style: "margin:0 0 10px" }, h("strong", { text: ventarPaaminning + " kundar" }),
+          " har bede om ein SMS når det er tid for ved. No er det tid!"),
+        h("a", { class: "knapp primar", href: "#/paaminning" }, ikon("💬"), "Send påminningar")) : null,
       kopiGammal ? h("div", { class: "boks-gronn", style: "margin-top:24px" },
         h("p", { style: "margin:0 0 10px", text: "Det er lenge sidan du sende tryggingskopi til Benjamin." }),
         h("button", { class: "knapp", type: "button", onclick: sendKopi }, ikon("📤"), "Send tryggingskopi no")) : null,
@@ -354,7 +362,7 @@
       const ordre = {
         id: forrige.id || (eksisterende && eksisterende.id) || Ved.nyId(),
         opprettet: forrige.opprettet || new Date().toISOString(),
-        kilde: forrige.kilde || (fraNettside ? "nettside" : "app"),
+        kilde: forrige.kilde || (fraNettside ? "nettside" : betaltNo ? "innom" : "app"),
         navn: s.navn.trim(), telefon: s.telefon.trim(),
         antall: Object.assign({}, s.antall), priser: s.priser || Ved.naaPriser(), rabatt: Ved.rabattFor(s),
         levering: s.levering,
@@ -363,6 +371,8 @@
         manuellFrakt: s.levering ? s.manuellFrakt : null, manuellTotal: s.manuellTotal != null ? s.manuellTotal : null,
         ved: b.ved, frakt: s.levering ? b.frakt : 0, total: b.total, fraktUkjent: s.levering === true && b.fraktUkjent,
         notat: s.notat.trim(),
+        paaminning: Boolean(s.paaminning),
+        samtykkeDato: s.paaminning ? (forrige.samtykkeDato || new Date().toISOString()) : null,
         status: forrige.status || "aapen", ferdig: forrige.ferdig || null,
         betalt: forrige.betalt || null, betaltDato: forrige.betaltDato || null,
       };
@@ -477,18 +487,70 @@
     return linjer.join("\n");
   }
 
+  // Bileta pappa kan velje mellom i annonsen. «Med prisar» blir laga på nytt frå config.js (verktoy/lag_bilder.py).
+  const ANNONSEBILETE = [
+    { fil: "og-bilde.jpg", namn: "Med prisar" },
+    { fil: "bilder/sekkar.jpg", namn: "Sekkane" },
+    { fil: "bilder/stabel.jpg", namn: "Vedstabelen" },
+  ];
+
   function facebookSide() {
     settTittel("Facebook-annonse", true);
     const felt = h("textarea", { class: "felt annonse", value: annonsetekst(), "aria-label": "Annonsetekst" });
+    let valt = 0;
+    // Biletet blir henta på førehand, så «Del» skjer med ein gong etter trykket (krav frå nettlesaren).
+    const blobar = {};
+    const hent = (i) => {
+      if (!blobar[i]) blobar[i] = fetch(ANNONSEBILETE[i].fil).then((r) => r.blob()).catch(() => null);
+      return blobar[i];
+    };
+    hent(0);
+
+    const val = ANNONSEBILETE.map((b, i) => h("button", {
+      type: "button", class: "bilete-val", "aria-pressed": String(i === valt), "aria-label": "Vel biletet «" + b.namn + "»",
+      onclick: () => {
+        valt = i;
+        val.forEach((knapp, j) => knapp.setAttribute("aria-pressed", String(j === i)));
+        hent(i);
+      },
+    }, h("img", { src: b.fil, alt: "", loading: "lazy" }), h("span", { text: b.namn })));
+
+    async function delPaaFacebook() {
+      const kopiert = await Ved.kopier(felt.value);
+      const blob = await hent(valt);
+      if (blob) {
+        const fil = new File([blob], "ved-fra-teigen.jpg", { type: blob.type || "image/jpeg" });
+        if (navigator.canShare && navigator.canShare({ files: [fil] })) {
+          try {
+            await navigator.share({ files: [fil], text: felt.value });
+            Ved.visMelding(kopiert ? "Teksten er kopiert – hald fingeren i tekstfeltet på Facebook og vel «Lim inn»." : "Skriv teksten på Facebook.");
+            return;
+          } catch (e) {
+            if (e && e.name === "AbortError") return;
+          }
+        }
+      }
+      // Reserve: last ned biletet, så han kan leggje det ved sjølv.
+      const a = h("a", { href: ANNONSEBILETE[valt].fil, download: "ved-fra-teigen.jpg" });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      Ved.visMelding("Biletet er lasta ned" + (kopiert ? " og teksten er kopiert" : "") + ". Opne Facebook, legg ved biletet og lim inn teksten.");
+    }
+
     vis(h("div", { class: "stabel" },
-      h("p", { text: "Her er ein ferdig annonse. Du kan endre teksten før du kopierer han." }),
+      h("p", { text: "1. Vel eit bilete:" }),
+      h("div", { class: "galleri" }, val),
+      h("p", { text: "2. Sjekk teksten (du kan endre han):" }),
       felt,
-      h("button", { class: "knapp primar stor", type: "button", onclick: async () => {
+      h("button", { class: "knapp primar stor", type: "button", onclick: delPaaFacebook }, ikon("📣"), "Del på Facebook"),
+      h("p", { class: "boks-gronn" }, h("strong", { text: "Slik gjer du: " }),
+        "Trykk «Del på Facebook» og vel Facebook. Biletet kjem med av seg sjølv. Teksten er alt kopiert – " +
+        "hald fingeren i tekstfeltet og vel «Lim inn». Legg annonsen ut på nytt når det blir kaldt."),
+      h("button", { class: "knapp", type: "button", onclick: async () => {
         const ok = await Ved.kopier(felt.value);
-        Ved.visMelding(ok ? "Kopiert! Opne Facebook, hald fingeren i tekstfeltet og vel «Lim inn»." : "Klarte ikkje å kopiere.");
-      } }, ikon("📋"), "Kopier teksten"),
-      h("button", { class: "knapp", type: "button", onclick: () => Ved.del(felt.value) }, ikon("↗"), "Del …"),
-      h("p", { class: "boks-gronn", text: "Tips: Legg ved eit bilete av veden, og legg annonsen ut på nytt når det blir kaldt." })));
+        Ved.visMelding(ok ? "Teksten er kopiert." : "Klarte ikkje å kopiere.");
+      } }, ikon("📋"), "Berre kopier teksten")));
   }
 
   /* ---------- Oversikt over salet ---------- */
@@ -531,6 +593,10 @@
         ? "Du nærmar deg 50 000 kr. Over grensa må du registrere deg for moms (MVA). Snakk med Benjamin."
         : "Grensa for moms (MVA) er 50 000 kr i løpet av 12 månader." }));
 
+    const fra = (k) => iAar.filter((o) => (o.kilde || "app") === k).length;
+    const kjelder = "Frå nettsida: " + fra("nettside") + " · Telefon, Facebook o.l.: " + fra("app") + " · Kjøpt på staden: " + fra("innom");
+    const antalPaaminning = paaminningsKundar().length;
+
     const delTekst = () => [
       "Vedsal " + aar + " (" + C.navn + ")",
       "Bestillingar: " + sum.antall,
@@ -538,6 +604,8 @@
       "Ved: " + kr(sum.ved), "Frakt: " + kr(sum.frakt), "Totalt: " + kr(sum.total),
       "", ...maaneder.map(([navn, s]) => navn + ": " + kr(s.total) + " (" + s.antall + " best.)"),
       "", "Ikkje betalt no: " + kr(ubetalt.total),
+      kjelder,
+      "Kundar som vil ha påminning neste haust: " + antalPaaminning,
     ].join("\n");
 
     vis(
@@ -555,11 +623,76 @@
         h("tr", {}, h("th", { text: "Månad" }), h("th", { text: "Selt" })),
         ...maaneder.map(([navn, s]) => h("tr", {}, h("td", { text: navn + " (" + s.antall + ")" }), h("td", { text: kr(s.total) }))))
         : h("p", { class: "tom", text: "Ingen ferdige bestillingar i " + aar + "." }),
+      iAar.length ? h("p", { class: "hint", style: "margin-top:12px", text: "Kvar kom bestillingane frå? " + kjelder }) : null,
       h("div", { style: "margin-top:18px" }, mvaBoks),
       h("div", { class: "stabel", style: "margin-top:18px" },
+        h("a", { class: "knapp", href: "#/paaminning" }, ikon("💬"), "Påminning neste haust (" + antalPaaminning + " kundar)"),
         h("button", { class: "knapp", type: "button", onclick: () => Ved.del(delTekst()) }, ikon("📤"), "Send oversikta til Benjamin"),
         h("a", { class: "lenkeknapp", href: "#/benjamin" }, "Tryggingskopi og innstillingar")),
     );
+  }
+
+  /* ---------- Påminning neste haust (berre kundar som har sagt ja) ---------- */
+
+  // Éin rad per kunde (telefonnummer) som har sagt ja og ikkje har meldt seg av.
+  function paaminningsKundar() {
+    const aar = new Date().getFullYear();
+    const perNr = new Map();
+    for (const o of data.ordre) {
+      if (!o.telefon || o.anonym) continue;
+      const nr = Ved.telefonLenke(o.telefon);
+      const k = perNr.get(nr) || { nr, telefon: o.telefon, navn: o.navn, ja: false, nei: false, sendt: null, sist: "" };
+      if (o.paaminning) k.ja = true;
+      if (o.opprettet > k.sist) k.sist = o.opprettet;
+      if (o.paaminningNei) k.nei = true;
+      if (o.paaminningSendt && (!k.sendt || o.paaminningSendt > k.sendt)) k.sendt = o.paaminningSendt;
+      if (o.navn) k.navn = o.navn;
+      perNr.set(nr, k);
+    }
+    // Har kunden handla dei siste 150 dagane, har han alt fått ved denne sesongen – vent til neste haust.
+    const nyleg = Date.now() - 150 * 24 * 3600 * 1000;
+    return [...perNr.values()].filter((k) => k.ja && !k.nei)
+      .map((k) => Object.assign(k, {
+        sendtIAar: Boolean(k.sendt) && new Date(k.sendt).getFullYear() === aar,
+        handlaNyleg: Boolean(k.sist) && new Date(k.sist).getTime() > nyleg,
+      }))
+      .map((k) => Object.assign(k, { klar: !k.sendtIAar && !k.handlaNyleg }))
+      .sort((a, b) => (b.klar - a.klar) || (a.navn || "").localeCompare(b.navn || "", "nn"));
+  }
+
+  function merkKunde(nr, felt, verdi) {
+    for (const o of data.ordre) if (o.telefon && Ved.telefonLenke(o.telefon) === nr) o[felt] = verdi;
+    return lagreData();
+  }
+
+  function paaminningsTekst(k) {
+    const bjork = C.produkter[0];
+    const rabatt = C.rabatt ? " (" + kr(C.rabatt.pris) + " frå " + C.rabatt.fraAntal + " sekkar)" : "";
+    return "Hei " + fornavn(k.navn) + "! Det nærmar seg fyringssesongen. Eg har tørr bjørkeved og granved klar – " +
+      "bjørk " + kr(bjork.pris) + " per 60 l sekk" + rabatt + ".\nBestill her: " + nettside() +
+      " – eller berre svar på denne SMS-en.\nVil du ikkje ha fleire påminningar, svar NEI.\nHelsing " + C.selgerFornavn + ", " + C.navn;
+  }
+
+  function paaminningSide() {
+    settTittel("Påminning", true);
+    const kundar = paaminningsKundar();
+    vis(h("div", { class: "stabel" },
+      h("p", { text: "Desse kundane har sagt ja til ein SMS når det er tid for ved. Trykk «Send», så opnar det seg ein ferdig SMS." }),
+      kundar.length ? kundar.map((k) => h("article", { class: "ordre kort" },
+        h("div", { class: "ordre-topp" },
+          h("h3", { class: "ordre-navn", text: k.navn || "Kunde" }),
+          h("span", { class: "ordre-dato", text: Ved.visTelefon(k.telefon) })),
+        h("p", { class: "hint", text: k.sendtIAar ? "Sendt " + dato(k.sendt) + " ✔"
+          : k.handlaNyleg ? "Handla " + dato(k.sist) + " – vent til neste haust" : "Klar for påminning" }),
+        h("div", { class: "knapp-rad" },
+          h("a", { class: "knapp primar", href: Ved.smsLenke(k.telefon, paaminningsTekst(k)),
+            onclick: () => { merkKunde(k.nr, "paaminningSendt", new Date().toISOString()); setTimeout(paaminningSide, 800); } },
+            ikon("💬"), k.sendtIAar ? "Send igjen" : "Send"),
+          h("button", { class: "knapp", type: "button", onclick: () => {
+            if (!confirm((k.navn || "Kunden") + " vil ikkje ha fleire påminningar?")) return;
+            if (merkKunde(k.nr, "paaminningNei", true)) { Ved.visMelding("Teke bort ✔"); paaminningSide(); }
+          } }, "Vil ikkje ha")))) : h("p", { class: "tom", text: "Ingen kundar har bede om påminning enno. Kryss av for «påminning neste haust» når kunden seier ja." }),
+      h("p", { class: "boks-gronn", text: "Send berre til dei som har sagt ja. Svarar nokon NEI, trykk «Vil ikkje ha» – då får dei ikkje fleire." })));
   }
 
   /* ---------- Tryggingskopi (for Benjamin) ---------- */

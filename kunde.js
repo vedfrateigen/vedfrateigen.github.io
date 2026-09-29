@@ -42,6 +42,7 @@
     if (s.navn.trim()) linjer.push("Namn: " + s.navn.trim());
     if (s.telefon.trim()) linjer.push("Tlf: " + Ved.visTelefon(s.telefon.trim()));
     if (s.notat.trim()) linjer.push("Merknad: " + s.notat.trim());
+    if (s.paaminning) linjer.push("Påminning neste haust: ja takk");
     linjer.push("", "For seljar – legg inn i Vedsal: " + lenke);
     return linjer.join("\n");
   }
@@ -127,7 +128,8 @@
     h("h2", { text: "Personvern" }),
     h("p", { text: "Denne sida lagrar ingenting om deg og brukar ikkje informasjonskapslar (cookies). Bestillinga blir send som ein vanleg SMS frå telefonen din. " +
       "Adressa du skriv, blir slått opp hos Kartverket, og kartpunktet blir sendt til ruteplanleggjaren OSRM for å rekne ut køyreavstanden. " +
-      "Seljaren (" + C.selger + ") lagrar namn, telefon og adresse på eigen telefon for å levere, og slettar det seinast " + C.slettEtterMaaneder + " månader etter at handelen er ferdig." }),
+      "Seljaren (" + C.selger + ") lagrar namn, telefon og adresse på eigen telefon for å levere, og slettar det seinast " + C.slettEtterMaaneder + " månader etter at handelen er ferdig. " +
+      "Kryssar du av for påminning, får du éin SMS når det er tid for ved neste haust – ikkje anna. Svar NEI, så kjem det ikkje fleire." }),
     h("p", { text: "Adresser og stadnamn © Kartverket. Køyreavstand frå OSRM, kartdata © OpenStreetMap-bidragsytarar." }),
     h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.selger + " · " + C.henteadresse + " · " + Ved.visTelefon(C.telefon) }));
 

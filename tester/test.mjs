@@ -79,6 +79,13 @@ test("avtalt totalpris overstyrer, og veden får resten", () => {
   assert.equal(V.beregn({ antall: { sekk: 10 }, levering: false, manuellTotal: null }).total, 1250);
 });
 
+test("samtykke til påminning følgjer med lenka – og manglar det, er det nei", () => {
+  const o = { id: "abc", navn: "Kari", telefon: "000", antall: { sekk: 10 }, levering: false, paaminning: true };
+  assert.equal(V.paramTilOrdre(V.ordreTilParam(o)).paaminning, true);
+  assert.equal(V.paramTilOrdre(V.ordreTilParam({ ...o, paaminning: false })).paaminning, false);
+  assert.equal(V.paramTilOrdre("i=x1&sekk=1").paaminning, false);
+});
+
 test("tekst på nynorsk", () => {
   assert.equal(V.beskrivAntall({ sekk: 10, gran: 1, m3: 1.5 }), "10 sekkar bjørk og 1 sekk gran og 1,5 m³ laus bjørk");
   assert.equal(V.kr(1658), "1" + nbsp + "658" + nbsp + "kr");

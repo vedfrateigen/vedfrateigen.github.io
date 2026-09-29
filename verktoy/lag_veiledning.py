@@ -409,16 +409,16 @@ def side_forsiden(c):
 def side_ny_bestilling(c):
     y = ny_side(c, "Når nokon vil kjøpe ved", kapittel=2,
                 ingress="Det tek under eitt minutt. Appen reknar ut prisen medan du fyller inn.")
-    pw, gap = 184, 64
+    pw, gap = 170, 64
     x1 = (W - 2 * pw - gap) / 2
     b1 = telefon(c, "13-ny-utfylt-topp.png", x1, y, pw, [(1, 80), (2, 534), (3, 1738), (4, 2190)])
-    b2 = telefon(c, "14-ny-utfylt-bunn.png", x1 + pw + gap, y, pw, [(5, 541), (6, 2578), (7, 2815)])
+    b2 = telefon(c, "14-ny-utfylt-bunn.png", x1 + pw + gap, y, pw, [(5, 541), (6, 2884), (7, 3122)])
     y = to_kolonner_steg(c, min(b1, b2) - 22, [
         "Trykk «Ny bestilling» på framsida.",
         "Trykk <b>+</b> til rett tal sekkar – bjørk, gran eller laus kubikk.",
         "Vel «Levering» eller «Hentar sjølv».",
         "Skriv adressa og trykk på rett forslag. <b>Frakta blir rekna ut av seg sjølv.</b>",
-        "Skriv namn og telefonnummer.",
+        "Skriv namn og telefonnummer. Vil kunden ha SMS neste haust, kryss av.",
         "Trykk <b>«Lagre bestillinga»</b>. Ferdig!",
         "Vil du sende prisen til kunden? Trykk «Send prisen til kunden».",
     ]) - 6
@@ -548,12 +548,12 @@ def side_facebook_oversikt(c):
     c.setFillColor(TEKST)
     c.drawString(M, y, "Facebook-annonse")
     c.drawString(M + kol + 30, y, "Sal i år")
-    para(c, "Teksten er ferdig skriven med prisane dine og lenkje til nettsida. Trykk <b>«Kopier teksten»</b>, "
-         "opne Facebook, hald fingeren i tekstfeltet og vel <b>«Lim inn»</b>. Ta gjerne med eit bilete av veden.",
+    para(c, "Vel eit bilete og trykk <b>«Del på Facebook»</b>. Vel Facebook – biletet kjem med av seg sjølv. "
+         "Teksten med prisane er alt kopiert: hald fingeren i tekstfeltet og vel <b>«Lim inn»</b>.",
          M, y - 10, kol, KORT)
     para(c, "Sjå kor mykje du har selt, kor mange sekkar, frakt og kven som ikkje har betalt. Nedst ser du kor nær du er "
-         "<b>50 000 kr – grensa for moms</b>. «Send oversikta til Benjamin» sender tala, til dømes når skattemeldinga "
-         "skal fyllast ut.", M + kol + 30, y - 10, kol, KORT)
+         "<b>50 000 kr – grensa for moms</b>. «Send oversikta til Benjamin» sender tala. Her finn du òg "
+         "<b>«Påminning neste haust»</b> for kundar som har sagt ja.", M + kol + 30, y - 10, kol, KORT)
 
 
 def mini_plakat(c, x, y, w):
