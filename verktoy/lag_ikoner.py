@@ -1,3 +1,4 @@
+# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager app-ikonene (PNG) fra samme tegning som ikon.svg. Kjør: python3 verktoy/lag_ikoner.py"""
 from PIL import Image, ImageDraw
 

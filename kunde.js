@@ -1,3 +1,4 @@
+// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Kundesida: prisliste, priskalkulator og bestilling på SMS til seljaren. */
 (function () {
   "use strict";
@@ -131,7 +132,8 @@
       "Seljaren (" + C.selger + ") lagrar namn, telefon og adresse på eigen telefon for å levere, og slettar det seinast " + C.slettEtterMaaneder + " månader etter at handelen er ferdig. " +
       "Kryssar du av for påminning, får du éin SMS når det er tid for ved neste haust – ikkje anna. Svar NEI, så kjem det ikkje fleire." }),
     h("p", { text: "Adresser og stadnamn © Kartverket. Køyreavstand frå OSRM, kartdata © OpenStreetMap-bidragsytarar." }),
-    h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.selger + " · " + C.henteadresse + " · " + Ved.visTelefon(C.telefon) }));
+    h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.selger + " · " + C.henteadresse + " · " + Ved.visTelefon(C.telefon) }),
+    h("p", { text: "Nettside og app: © 2026 Benjamin Teigen" }));
 
   Ved.registrerOffline();
 })();

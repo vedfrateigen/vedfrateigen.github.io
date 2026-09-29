@@ -70,3 +70,11 @@ python3 verktoy/lag_veiledning.py                      # «Vedsal – slik funge
 | Reklame langs vei ([veglova § 33](https://lovdata.no/lov/1963-06-21-23), [Statens vegvesen](https://www.vegvesen.no/en/traffic-information/along-the-road/apply-for-roadside-advertisement/)) | Skilt som vender mot offentlig vei krever løyve | Står som merknad i idélista i PDF-en |
 | Kartdata (Kartverket, OpenStreetMap/OSRM) | Kreditering | Står nederst på kundesida |
 | Mål for ved (NS 4414, frivillig standard) | Oppgi volum (liter / løs m³) | 60 l sekk og «laust mål, ikkje stabla» står på sida |
+
+## Rettigheter
+
+- **© 2026 Benjamin Teigen, alle rettigheter forbeholdt.** Se `LICENSE`. Repoet er offentlig fordi GitHub Pages krever det på gratisplanen, men uten lisens har ingen lov til å kopiere eller gjenbruke koden.
+- Opphavsretten oppstår automatisk, uten registrering eller ©-merking ([Patentstyret](https://www.patentstyret.no/en/intellectual-property/copyright)). Merkingen gjør det likevel tydelig hvem som eier løsningen.
+- **Arbeidsforhold:** Programvare en ansatt lager som del av jobben eller etter arbeidsgivers anvisning, går over til arbeidsgiveren ([åndsverkloven § 71](https://lovdata.no/nav/lov/2018-06-15-40/kap4)). Vedsal er laget privat for pappa. Avklar med Eikefjord.AI før løsningen eventuelt selges.
+- **Før salg til andre:** PDF-ene bruker Apples systemfont Avenir Next. Bytt til en fri font (f.eks. Inter, SIL OFL) før trykksaker lages for betalende kunder. Vurder også å flytte verktøyene (`verktoy/`, `tester/`) til et privat repo og bare publisere nettsidefilene.
+- «Ved frå Teigen», prisene og kontaktinformasjonen tilhører pappa sin virksomhet. Bildene er tatt av Benjamin.

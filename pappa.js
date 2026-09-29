@@ -1,3 +1,4 @@
+// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Vedsal – pappa-appen. Alt lagres bare på telefonen (localStorage). All tekst er på nynorsk. */
 (function () {
   "use strict";
@@ -753,7 +754,7 @@
 
     vis(h("div", { class: "stabel" },
       h("p", { text: "Alt i Vedsal ligg berre på denne telefonen. Send ein tryggingskopi til Benjamin av og til." }),
-      h("p", { class: "hint", text: data.ordre.length + " bestillingar lagra · versjon " + VERSJON }),
+      h("p", { class: "hint", text: data.ordre.length + " bestillingar lagra · Vedsal versjon " + VERSJON + " · © 2026 Benjamin Teigen" }),
       status,
       h("p", { class: "hint", text: "Sist send: " + (data.sistKopi ? new Date(data.sistKopi).toLocaleDateString("nn-NO") : "aldri") }),
       h("button", { class: "knapp primar", type: "button", onclick: sendKopi }, ikon("📤"), "Send tryggingskopi"),

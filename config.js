@@ -1,3 +1,4 @@
+// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Ved frå Teigen – alle prisar og innstillingar på éin stad.
    Endrar du noko her, gjeld det både kundesida (index.html) og pappa-appen (pappa.html). */
 window.VED = {

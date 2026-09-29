@@ -1,3 +1,4 @@
+// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Felles for kundesida og pappa-appen: priser, avstand, adressesøk og bestillingsskjemaet. */
 (function () {
   "use strict";

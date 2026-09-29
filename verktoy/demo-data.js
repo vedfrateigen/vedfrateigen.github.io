@@ -1,3 +1,4 @@
+// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Kun for skjermbilder/demo: eksempelbestillinger med fiktive kunder. Brukes ikke i appen. */
 (function () {
   // Test av «utselt»: side#utselt=gran setter config.utselt før sida starter.

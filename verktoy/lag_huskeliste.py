@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager «Vedsal – huskeliste» (2 sider, nynorsk): kva pappa gjer i kvar situasjon. Til kjøleskapet.
 
 Kjør:  python3 verktoy/lag_huskeliste.py
@@ -28,6 +29,8 @@ def topp(c, nr, tittel, ingress=None):
     c.setFillColor(DEMPET)
     c.drawString(M, H - 32, "VEDSAL  ·  HUSKELISTE")
     c.drawRightString(W - M, H - 32, f"SIDE {nr} AV 2")
+    c.setFont("Av-R", 8)
+    c.drawString(M, 20, "Vedsal © 2026 Benjamin Teigen")
     c.setFont("Av-H", 26)
     c.setFillColor(TEKST)
     c.drawString(M, H - 80, tittel)

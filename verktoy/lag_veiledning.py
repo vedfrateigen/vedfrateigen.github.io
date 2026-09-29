@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager «Vedsal – slik fungerer det» (PDF, nynorsk) med ekte skjermbilder fra appen.
 
 Kjør fra prosjektmappa:  python3 verktoy/lag_veiledning.py
@@ -335,7 +336,7 @@ def forside(c):
         y -= 40
     c.setFont("Av-R", 10.5)
     c.setFillColor(DEMPET)
-    c.drawString(M, 44, "Laga til " + k.C["selgerFornavn"] + " av Benjamin  ·  september 2026")
+    c.drawString(M, 44, "Laga til " + k.C["selgerFornavn"] + " av Benjamin Teigen  ·  september 2026  ·  © 2026 Benjamin Teigen")
 
 
 def side_nytte(c):
