@@ -51,7 +51,7 @@ d.text((58, 170), "Tørr ved", font=font(92, 8), fill="white")
 d.text((58, 268), "frå Naustdal", font=font(92, 8), fill="white")
 for i, p in enumerate(k.C["produkter"][:3]):
     d.text((62, 400 + i * 46), p["kortnavn"] + "   " + k.kr(p["pris"]), font=font(36, 2), fill="white")
-d.text((62, 560), "Levering i Førde og Naustdal – eller hent sjølv", font=font(26, 7), fill=(225, 238, 227))
+d.text((62, 560), "Levering i Naustdal, Førde og Florø – eller hent sjølv", font=font(26, 7), fill=(225, 238, 227))
 T = k.C.get("tilbod")
 if T and "gran" not in (k.C.get("utselt") or []):
     # Raud tilbodsmerke oppe til høgre

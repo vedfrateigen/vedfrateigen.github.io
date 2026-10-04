@@ -19,7 +19,7 @@
     ...(Ved.tilbodNaa() ? [h("div", { class: "prisrad rabatt" },
       h("div", {},
         h("div", { class: "navn" }, h("span", { class: "merkelapp", text: "Fast tilbod" }), Ved.tilbodTekst() + "."),
-        h("div", { class: "detalj", text: "Gjeld heile tida – så lenge det er granved att." })),
+        h("div", { class: "detalj", text: "Gratissekken blir lagt til automatisk når du bestiller. Gjeld heile tida – så lenge det er granved att." })),
       h("div", { class: "pris" }, "Gratis", h("span", { class: "per", text: "opptenning" })))] : [])));
 
   /* Kalkulator og bestilling */
@@ -117,7 +117,7 @@
       h("p", { text: "Frakt blir rekna ut frå køyrde kilometer tur/retur: " + tall(L.krPerKm) + " kr per km" +
         (L.startpris ? " + " + kr(L.startpris) : "") + ", minst " + kr(L.minimum) + ", runda opp til næraste " + L.rundOppTil + "-lapp." }),
       eksempler,
-      h("p", { class: "hint", text: "Vi leverer mest i Naustdal og Førde. Florø og andre stader etter avtale. Over " + L.maksKm + " km avtalar vi prisen." })),
+      h("p", { class: "hint", text: "Vi leverer i Naustdal, Førde og Florø. Andre stader etter avtale – ta kontakt. Over " + L.maksKm + " km avtalar vi prisen." })),
     infoKort("🏠", "Hent sjølv",
       h("p", {}, "Hent hos " + C.selgerFornavn + " på ", h("strong", { text: C.henteadresse }), ". Send SMS først for å avtale tid."),
       h("a", { class: "knapp", href: Ved.kartLenke({ punkt: C.start }), target: "_blank", rel: "noopener" },

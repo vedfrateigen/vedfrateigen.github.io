@@ -490,9 +490,9 @@
   function facebookTekst() {
     const linjer = ["🔥 Tørr " + vedtypar() + " til sals frå Naustdal!"];
     if (Ved.tilbodTekst(true)) linjer.push("🎁 " + Ved.tilbodTekst(true) + ".");
-    linjer.push("🚚 Levering i Naustdal og Førde – eller hent sjølv.");
-    linjer.push("👉 Sjå prisar og bestill her: " + nettside());
-    linjer.push("📞 Eller ring " + C.selgerFornavn + ": " + Ved.visTelefon(C.telefon));
+    linjer.push("🚚 Levering i Naustdal, Førde og Florø – eller hent sjølv. Andre stader? Ta kontakt.");
+    linjer.push("👉 Prisar og bestilling: " + nettside().replace(/\/$/, ""));
+    linjer.push("📞 Eller ring meg på " + Ved.visTelefon(C.telefon)); // pappa legg ut frå sin eigen konto
     return linjer.join("\n");
   }
 
