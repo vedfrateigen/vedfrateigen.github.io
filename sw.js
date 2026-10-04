@@ -1,6 +1,6 @@
-// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+// © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 /* Gjør at Vedsal åpner seg også uten dekning. Henter alltid nyeste versjon når det er nett. */
-const CACHE = "vedsal-2026-09-29-1518";
+const CACHE = "vedsal-2026-10-04-1643";
 const FILER = ["./", "index.html", "pappa.html", "stil.css", "config.js", "felles.js", "kunde.js", "pappa.js",
   "ikon.svg", "ikon-192.png", "ikon-180.png", "manifest.webmanifest", "og-bilde.jpg", "bilder/sekkar.jpg", "bilder/stabel.jpg"];
 

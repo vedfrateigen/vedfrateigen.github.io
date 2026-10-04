@@ -1,5 +1,5 @@
 #!/bin/sh
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 # Publiserer endringer til https://vedfrateigen.github.io (GitHub Pages bygger på nytt på ca. ett minutt).
 # Bruk: sh verktoy/publiser.sh "Kort beskrivelse av endringen"
 set -e

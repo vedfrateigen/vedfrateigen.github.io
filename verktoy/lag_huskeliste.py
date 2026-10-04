@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager «Vedsal – huskeliste» (2 sider, nynorsk): kva pappa gjer i kvar situasjon. Til kjøleskapet.
 
 Kjør:  python3 verktoy/lag_huskeliste.py
@@ -30,7 +30,7 @@ def topp(c, nr, tittel, ingress=None):
     c.drawString(M, H - 32, "VEDSAL  ·  HUSKELISTE")
     c.drawRightString(W - M, H - 32, f"SIDE {nr} AV 2")
     c.setFont("Av-R", 8)
-    c.drawString(M, 20, "Vedsal © 2026 Benjamin Teigen")
+    c.drawString(M, 20, "Vedsal © 2026 Benjamin Bruflot Teigen · tlf. 913 47 058")
     c.setFont("Av-H", 26)
     c.setFillColor(TEKST)
     c.drawString(M, H - 80, tittel)
@@ -161,7 +161,7 @@ def side2(c):
     for n, t in enumerate(["<b>Alt sal inn i Vedsal</b> – òg dei som hentar og betalar med ein gong.",
                            "Trykk <b>«Ferdig»</b> når veden er levert eller henta.",
                            "Trykk <b>«Betalt»</b> når pengane er komne.",
-                           "<b>Du kan ikkje øydeleggje noko.</b> Lurer du på noko? Ring Benjamin."], 1):
+                           "<b>Du kan ikkje øydeleggje noko.</b> Lurer du på noko? Ring Benjamin – 913 47 058."], 1):
         nummer(c, M + 32, yy - 8, n, r=10, farge=BRUN)
         yy = para(c, t, M + 52, yy, W - 2 * M - 72, hvit) - 6
 
@@ -169,7 +169,7 @@ def side2(c):
 def main():
     c = canvas.Canvas(UT, pagesize=A4)
     c.setTitle("Vedsal – huskeliste")
-    c.setAuthor("Benjamin Teigen")
+    c.setAuthor("Benjamin Bruflot Teigen")
     side1(c)
     c.showPage()
     side2(c)

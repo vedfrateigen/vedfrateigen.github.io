@@ -1,4 +1,4 @@
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Leser config.js (de samme prisene som nettsida og appen bruker) inn i Python-verktøyene."""
 import json
 import math

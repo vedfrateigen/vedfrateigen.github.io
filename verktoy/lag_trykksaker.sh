@@ -1,5 +1,5 @@
 #!/bin/sh
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 # Lager alt som har prisar/tekst i seg på nytt: nettbilete, skjermbilete, plakat, kort og rettleiinga.
 # Kjør etter at du har endra config.js:  sh verktoy/lag_trykksaker.sh
 set -e

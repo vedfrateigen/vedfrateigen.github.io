@@ -73,7 +73,7 @@ python3 verktoy/lag_veiledning.py                      # «Vedsal – slik funge
 
 ## Rettigheter
 
-- **© 2026 Benjamin Teigen, alle rettigheter forbeholdt.** Se `LICENSE`. Repoet er offentlig fordi GitHub Pages krever det på gratisplanen, men uten lisens har ingen lov til å kopiere eller gjenbruke koden.
+- **© 2026 Benjamin Bruflot Teigen, alle rettigheter forbeholdt.** Se `LICENSE`. Repoet er offentlig fordi GitHub Pages krever det på gratisplanen, men uten lisens har ingen lov til å kopiere eller gjenbruke koden.
 - Opphavsretten oppstår automatisk, uten registrering eller ©-merking ([Patentstyret](https://www.patentstyret.no/en/intellectual-property/copyright)). Merkingen gjør det likevel tydelig hvem som eier løsningen.
 - **Arbeidsforhold:** Programvare en ansatt lager som del av jobben eller etter arbeidsgivers anvisning, går over til arbeidsgiveren ([åndsverkloven § 71](https://lovdata.no/nav/lov/2018-06-15-40/kap4)). Vedsal er laget privat for pappa. Avklar med Eikefjord.AI før løsningen eventuelt selges.
 - **Før salg til andre:** PDF-ene bruker Apples systemfont Avenir Next. Bytt til en fri font (f.eks. Inter, SIL OFL) før trykksaker lages for betalende kunder. Vurder også å flytte verktøyene (`verktoy/`, `tester/`) til et privat repo og bare publisere nettsidefilene.

@@ -1,4 +1,4 @@
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager nettbildene fra Benjamins foto (verktoy/foto/). GPS og annen EXIF blir IKKE med.
 Kjør: python3 verktoy/lag_bilder.py"""
 import os

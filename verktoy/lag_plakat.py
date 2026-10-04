@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager A4-plakaten (med QR-kode og avrivingslappar) og ark med små kort til å leggje i leveransane.
 
 Kjør:  python3 verktoy/lag_plakat.py https://<adressa-til-nettsida>/

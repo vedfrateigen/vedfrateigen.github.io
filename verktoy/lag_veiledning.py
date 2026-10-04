@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+# © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 """Lager «Vedsal – slik fungerer det» (PDF, nynorsk) med ekte skjermbilder fra appen.
 
 Kjør fra prosjektmappa:  python3 verktoy/lag_veiledning.py
@@ -336,7 +336,7 @@ def forside(c):
         y -= 40
     c.setFont("Av-R", 10.5)
     c.setFillColor(DEMPET)
-    c.drawString(M, 44, "Laga til " + k.C["selgerFornavn"] + " av Benjamin Teigen  ·  september 2026  ·  © 2026 Benjamin Teigen")
+    c.drawString(M, 44, "Laga til " + k.C["selgerFornavn"] + " av Benjamin Bruflot Teigen  ·  © 2026  ·  tlf. 913 47 058")
 
 
 def side_nytte(c):
@@ -686,7 +686,7 @@ def side_sporsmal(c):
         yy = para(c, t, M + 52, yy, kol - 72, hvit) - 8
     yy -= 8
     para(c, "<b>Heng huskelista på kjøleskapet</b> – ho seier kva du gjer i kvar situasjon. "
-         "Lurer du på noko? Ring Benjamin. Du kan ikkje gjere noko gale.",
+         "Lurer du på noko? Ring Benjamin – 913 47 058. Du kan ikkje gjere noko gale.",
          M + 20, yy, kol - 40, hvit)
 
 
@@ -705,7 +705,7 @@ def main():
     kunde_sms = les_sms("10-kunde-skjema-lenke.txt", bytt_lenke="Trykk her for å leggje inn")
     c = canvas.Canvas(UT, pagesize=A4)
     c.setTitle("Vedsal – slik fungerer det")
-    c.setAuthor("Benjamin Teigen")
+    c.setAuthor("Benjamin Bruflot Teigen")
     c.setSubject("Enkel rettleiing til Vedsal – Ved frå Teigen")
     forside(c)
     side_nytte(c)

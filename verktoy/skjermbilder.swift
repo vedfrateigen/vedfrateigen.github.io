@@ -1,4 +1,4 @@
-// © 2026 Benjamin Teigen. Alle rettigheter forbeholdt – se LICENSE.
+// © 2026 Benjamin Bruflot Teigen. Alle rettigheter forbeholdt – se LICENSE.
 // Tar skjermbilder av appen med WebKit (samme motor som Safari), til brukerveiledningen.
 // Bygg og kjør:  swiftc -O verktoy/skjermbilder.swift -o /tmp/skjermbilder && /tmp/skjermbilder verktoy/skjermbilder.json
 import AppKit
