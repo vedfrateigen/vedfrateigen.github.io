@@ -489,8 +489,14 @@
   // Eigne bilete er tekne bort med vilje: eit delt bilete blir eit innlegg utan klikkbar lenkje.
   function facebookTekst() {
     const linjer = ["🔥 Tørr " + vedtypar() + " til sals frå Naustdal!"];
+    // Prisane i sjølve teksten – fleire vedgrupper krev det («pris, stad, type ved og mengde»).
+    const vare = (id) => C.produkter.find((p) => p.id === id && !(C.utselt || []).includes(p.id));
+    const sekk = [vare("sekk") && "bjørk " + kr(vare("sekk").pris), vare("gran") && "gran " + kr(vare("gran").pris)].filter(Boolean);
+    const prisar = ((sekk.length ? sekk.join(" og ") + " per 60 l sekk (30 cm). " : "") +
+      (vare("m3") ? "Stabla kubikk bjørk " + kr(vare("m3").pris) + " per m³." : "")).trim();
+    if (prisar) linjer.push("💰 " + prisar.charAt(0).toUpperCase() + prisar.slice(1));
     if (Ved.tilbodTekst(true)) linjer.push("🎁 " + Ved.tilbodTekst(true) + ".");
-    linjer.push("🚚 Levering i Naustdal, Førde og Florø – eller hent sjølv. Andre stader? Ta kontakt.");
+    linjer.push("🚚 Levering i Naustdal, Førde og Florø – eller hent sjølv i Naustdal. Andre stader? Ta kontakt.");
     linjer.push("👉 Prisar og bestilling: " + nettside().replace(/\/$/, ""));
     linjer.push("📞 Eller ring meg på " + Ved.visTelefon(C.telefon)); // pappa legg ut frå sin eigen konto
     return linjer.join("\n");
