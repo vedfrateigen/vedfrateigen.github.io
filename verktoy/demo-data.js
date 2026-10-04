@@ -30,12 +30,13 @@
   const dag = (n, t) => { const d = new Date(); d.setDate(d.getDate() - n); d.setHours(t || 12, 0, 0, 0); return d.toISOString(); };
   const dato = (y, m, d) => new Date(y, m - 1, d, 12).toISOString();
   const priser = { sekk: 125, gran: 79, m3: 2000 };
+  const tilbod = { kjop: "sekk", per: 10, gratis: "gran", antal: 1 };
   const o = (x) => {
     x.antall = Object.assign({ sekk: 0, gran: 0, m3: 0 }, x.antall);
     const ved = x.antall.sekk * 125 + x.antall.gran * 79 + x.antall.m3 * 2000;
     return Object.assign({
       kilde: "app", navn: "", telefon: "", notat: "", adresse: "", punkt: null, km: null, omtrent: false,
-      manuellFrakt: null, fraktUkjent: false, priser, levering: x.frakt > 0, frakt: 0, status: "ferdig",
+      manuellFrakt: null, fraktUkjent: false, priser, tilbod, levering: x.frakt > 0, frakt: 0, status: "ferdig",
       betalt: "vipps", betaltDato: x.ferdig, ved, total: ved + (x.frakt || 0),
     }, x, { opprettet: x.opprettet || x.ferdig });
   };

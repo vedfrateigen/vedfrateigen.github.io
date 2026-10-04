@@ -40,9 +40,8 @@ TELEFON = k.telefon()
 SELGER = k.C["selger"]
 FORNAVN = k.C["selgerFornavn"]
 PRISAR = [(p["kortnavn"], p["detalj"].lower(), k.kr(p["pris"])) for p in k.C["produkter"]]
-R = k.C.get("rabatt")
-if R:
-    PRISAR.append((f"{R['fraAntal']} sekkar bjørk eller fleire", "TILBOD – pris per sekk", k.kr(R["pris"])))
+T = k.C.get("tilbod") if "gran" not in (k.C.get("utselt") or []) else None
+R = None  # den gamle mengderabatten er avløyst av tilbodet
 MINST = k.C["levering"]["minstSekkar"]
 
 
@@ -128,6 +127,22 @@ def plakat():
         c.setLineWidth(1)
         c.line(M, y - 29, M + kol, y - 29)
         y -= 43
+    if T:
+        # Raud tilbodsboks i staden for ei vanleg prisrad
+        # «Fast tilbod» med vilkåret – Forbrukertilsynet om betingede tilbud.
+        bh = 54
+        c.setFillColor(RAUD)
+        c.roundRect(M, y - bh + 14, kol, bh, 10, fill=1, stroke=0)
+        c.setFillColor(white)
+        c.setFont("Av-H", 11)
+        c.drawString(M + 12, y - 2, "FAST")
+        c.drawString(M + 12, y - 15, "TILBOD")
+        c.setFont("Av-B", 13.5)
+        c.drawString(M + 66, y - 2, f"For kvar {T['per']}. sekk bjørk:")
+        c.drawString(M + 66, y - 18, f"{T['antal']} sekk granved gratis!")
+        c.setFont("Av-R", 9.5)
+        c.drawString(M + 66, y - 32, "Gjeld heile tida – så lenge det er granved att.")
+        y -= 60
     c.setFillColor(TEKST)
     c.setFont("Av-D", 13.5)
     for linje in [f"Levering frå {MINST} sekkar – frakt etter avstand",

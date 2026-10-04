@@ -64,10 +64,10 @@
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 5; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Levering');\nawait __v(100);\nconst linje = [...document.querySelectorAll('.boks-gul')].find(e => !e.hidden && e.textContent.includes('Levering krev minst 10'));\nsjekk(linje, 'viser ikkje minstebestilling');\n__skriv('#kunde-navn', 'Test');\n__knapp('Bestill på SMS');\nawait __v(200);\nsjekk(document.getElementById('melding').textContent.includes('Levering krev minst 10'), 'stoppa ikkje bestillinga');\nfor (let i = 0; i < 5; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nawait __v(100);\nsjekk(linje.hidden, 'varselet forsvann ikkje ved 10 sekkar');\n"
   },
   {
-   "navn": "t11-rabatt",
+   "navn": "t11-tilbod",
    "side": "index.html",
    "hoyde": 844,
-   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 20; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Eg hentar sjølv');\nawait __v(100);\nconst tekst = document.querySelector('.oppsummering').textContent;\nsjekk(tekst.includes('à 120') && tekst.includes('(rabatt)'), 'rabatt ikkje brukt: ' + tekst);\nsjekk(document.querySelector('.sum-total').textContent.replace(/\\D/g, '') === '2400', 'feil sum: ' + document.querySelector('.sum-total').textContent);\n"
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nfor (let i = 0; i < 8; i++) document.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\n__knapp('Eg hentar sjølv');\nawait __v(100);\nsjekk(document.querySelector('.tilbod-tips') && document.querySelector('.tilbod-tips').textContent.includes('10 sekkar bjørk, får du 1 sekk granved gratis'), 'manglar tips ved 8 sekkar');\ndocument.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\ndocument.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nawait __v(100);\nconst tekst = document.querySelector('.oppsummering').textContent;\nsjekk(tekst.includes('1 sekk gran – tilbod') && tekst.includes('gratis'), 'gratis-sekken manglar: ' + tekst);\nsjekk(document.querySelector('.sum-total').textContent.replace(/\\D/g, '') === '1250', 'summen skal vere 1250: ' + document.querySelector('.sum-total').textContent);\nsjekk([...document.querySelectorAll('.prisrad')].some(r => r.textContent.includes('Kvar 10. sekk bjørk') && r.textContent.includes('Gratis')), 'prislista viser ikkje tilbodet');\nlet kopiert = ''; Ved.kopier = async (t) => { kopiert = t; return true; };\n__skriv('#kunde-navn', 'Tilbod Testesen');\n__knapp('Kopier bestillinga');\nawait __v(200);\nsjekk(kopiert.includes('Tilbod: 1 sekk gran gratis'), 'tilbodet er ikkje med i SMS-en: ' + kopiert);\n"
   },
   {
    "navn": "t12-pappa-minste-berre-atvaring",
@@ -142,16 +142,34 @@
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst d = new Date(); const iSesong = (d.getMonth() === 7 && d.getDate() >= 15) || d.getMonth() === 8 || d.getMonth() === 9;\nconst banner = [...document.querySelectorAll('.boks-gul')].find(b => b.textContent.includes('har bede om ein SMS'));\nif (iSesong) sjekk(banner && banner.textContent.includes('1 kundar'), 'framsida skal telje berre 1 klar kunde: ' + (banner ? banner.textContent : 'ingen'));\n"
   },
   {
-   "navn": "t22-facebook-bilete",
+   "navn": "t22-facebook-enkel",
    "side": "pappa.html#/facebook",
    "hoyde": 844,
-   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst val = [...document.querySelectorAll('.bilete-val')];\nsjekk(val.length === 3 && val[0].getAttribute('aria-pressed') === 'true', 'manglar biletval');\nval[1].click();\nsjekk(val[1].getAttribute('aria-pressed') === 'true' && val[0].getAttribute('aria-pressed') === 'false', 'kan ikkje velje bilete');\nawait __v(600);\nconst bilete = [...document.querySelectorAll('.bilete-val img')];\nsjekk(bilete.every(b => b.complete && b.naturalWidth > 0), 'eit bilete lastar ikkje');\nsjekk([...document.querySelectorAll('button')].some(b => b.textContent.includes('Del på Facebook')), 'manglar «Del på Facebook»');\nsjekk(document.querySelector('.annonse').value.includes('Kjell Arne'), 'annonseteksten manglar namnet');\n"
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nsjekk(!document.querySelector('.bilete-val, details.ferdige'), 'biletvalet finst framleis');\nconst t = document.body.textContent;\nsjekk(t.includes('Ikkje vel «Selg noe»'), 'manglar åtvaring mot «Selg noe»');\nsjekk(t.includes('sletteknappen'), 'manglar råd om dobbel tekst');\nsjekk(t.includes('ventar på godkjenning'), 'manglar råd om godkjenning');\nsjekk(!t.includes('Merk alt') && !t.includes('Skriv noko') && !t.includes('Del på Facebook'), 'gammal tekst står framleis');\n"
   },
   {
    "navn": "t23-bilete-ikkje-strekt",
    "side": "index.html",
    "hoyde": 844,
    "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst img = document.querySelector('.foto');\nimg.scrollIntoView(); await __v(500);\nconst r = img.getBoundingClientRect();\nsjekk(r.width > 0 && Math.abs(r.width / r.height - 4 / 3) < 0.05, 'produktbiletet har feil form: ' + Math.round(r.width) + '×' + Math.round(r.height));\n"
+  },
+  {
+   "navn": "t24-pappa-ser-gratissekken",
+   "side": "pappa.html#i=tilb1&n=Gave+Testesen&t=00000000&sekk=20&l=0",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nconst tekst = document.querySelector('.oppsummering').textContent;\nsjekk(tekst.includes('2 sekkar gran – tilbod'), 'pappa ser ikkje gratis-sekkane: ' + tekst);\n__knapp('Lagre bestillinga');\nawait __v(400);\nconst kort = [...document.querySelectorAll('.ordre')].find(k => k.textContent.includes('Gave Testesen'));\nsjekk(kort && kort.textContent.includes('20 sekkar bjørk + 2 sekkar gran gratis'), 'kortet viser ikkje gratis-sekkane: ' + (kort ? kort.textContent : 'ingen'));\nconst o = JSON.parse(localStorage.getItem('vedsalg.v1')).ordre.find(x => x.id === 'tilb1');\nsjekk(o.total === 2500 && o.gratis && o.gratis.gran === 2 && o.tilbod && o.tilbod.per === 10, 'feil lagring: ' + JSON.stringify({ total: o.total, gratis: o.gratis, tilbod: o.tilbod }));\n"
+  },
+  {
+   "navn": "t25-facebook-tilbod",
+   "side": "pappa.html#/facebook",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nlet kopiert = ''; Ved.kopier = async (t) => { kopiert = t; return true; };\n__knapp('Kopier annonsen');\nawait __v(200);\nsjekk(kopiert.includes('Fast tilbod: kvar 10. sekk bjørk gir 1 sekk granved gratis – så lenge det er granved att.'), 'annonsen manglar tilbodet: ' + kopiert);\nsjekk(kopiert.includes('Sjå prisar og bestill her: https://vedfrateigen.github.io/'), 'feil lenkje i annonsen: ' + kopiert);\nsjekk(!kopiert.includes('file:'), 'annonsen har ei lokal fillenkje');\nsjekk(kopiert.includes('917 50 205'), 'annonsen manglar telefonnummeret');\nsjekk(!kopiert.includes('120'), 'annonsen nemner framleis 120 kr');\nsjekk(kopiert.split('\\n').length <= 5, 'annonsen er for lang');\nsjekk(document.body.textContent.includes('Ikkje ta skjermbilde'), 'manglar åtvaring mot skjermbilde');\n"
+  },
+  {
+   "navn": "t28-utselt-gran-annonse",
+   "side": "pappa.html#/",
+   "hoyde": 844,
+   "js": "const sjekk = (ok, tekst) => { if (!ok) throw new Error('FEIL: ' + tekst); };\n\nVed.C.utselt = ['gran'];\nlocation.hash = '#/facebook';\nawait __v(300);\nlet kopiert = ''; Ved.kopier = async (t) => { kopiert = t; return true; };\n__knapp('Kopier annonsen');\nawait __v(200);\nsjekk(kopiert.startsWith('🔥 Tørr bjørkeved til sals'), 'første linja nemner utselt gran: ' + kopiert);\nsjekk(!kopiert.includes('Fast tilbod'), 'tilbodet er ikkje på pause: ' + kopiert);\nlocation.hash = '#/ny';\nawait __v(300);\ndocument.querySelector('[aria-label=\"Fleire sekkar bjørk\"]').click();\nawait __v(100);\nsjekk(document.querySelector('.oppsummering').textContent.includes('Tilbodet er på pause'), 'pappa ser ikkje at tilbodet er på pause');\n"
   }
  ]
 }

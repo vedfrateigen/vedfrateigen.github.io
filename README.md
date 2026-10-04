@@ -19,9 +19,12 @@ Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det 
 - **Ingen server og ingen database.** Kundesida lagrer ingenting. En bestilling sendes som vanlig SMS fra kundens telefon til pappa.
 - SMS-en inneholder en lenke (`pappa.html#i=…`). Når pappa trykker på den, åpnes bestillingen ferdig utfylt i appen. Prisen regnes alltid ut på nytt i appen, så en tuklet lenke kan ikke endre prisen.
 - Pappa-appen lagrer alt i `localStorage` på telefonen. Den ber om varig lagring (`navigator.storage.persist`) og virker uten dekning (`sw.js`).
-- **Rabatt:** 20 sekker bjørk eller flere → 120 kr per sekk (`rabatt` i `config.js`). Gamle bestillinger uten rabatt endres ikke.
-- **Utselt:** sett `utselt: ["gran"]` i `config.js` når granveden er tom. Da står «Utselt no» på nettsida.
-- **Minstebestilling for levering:** 10 sekker (løs kubikk regnes om: 1 m³ ≈ 16,7 sekker). Kundesida stopper bestillingen, pappa får bare en advarsel og kan lagre likevel.
+- **Fast tilbud:** for hver 10. sekk bjørk får kunden 1 sekk granved gratis, uten tak (`tilbod` i `config.js`: `kjop`, `per`, `gratis`, `antal`). Det står som «Fast tilbod: … – så lenge det er granved att» overalt der det markedsføres: prislista, annonsen, påminnelsen, Facebook-bildet og plakaten (se regeltabellen under). Gratissekken vises i kalkulatoren, i kundens SMS, i pappas oppsummering og på kortet i lista, men er ikke med i summen.
+- **Rabatt:** den gamle mengderabatten (120 kr per sekk fra 20 sekker) er avløst av tilbudet (`rabatt: null`). Settes både `rabatt` og `tilbod`, gjelder begge samtidig.
+- **Gamle bestillinger beholder reglene de ble lagret med.** Priser, rabatt og tilbud lagres med hver bestilling, så en prisendring endrer ikke det som alt er avtalt.
+- **Utselt:** sett `utselt: ["gran"]` i `config.js` når granveden er tom. Da står «Utselt no» på nettsida, gran forsvinner fra første linje i annonsen og påminnelsen, og tilbudet settes på pause (pappa ser «Tilbodet er på pause»). Bestillinger som ble lagret med tilbudet, beholder gratissekken. Kjør også `sh verktoy/lag_trykksaker.sh` (Facebook-bildet og plakaten uten tilbud), trykk «Scrape Again» (steg 4 under), og be pappa ta ned plakatene med tilbudet.
+- **Facebook-annonsen:** pappa trykker «Kopier annonsen» og limer inn én kort tekst med lenke og telefonnummer, én gang. Facebook lager forhåndsbildet selv fra `og-bilde.jpg`. Lenka kommer fra `nettside` i `config.js`. Valg av egne bilder er fjernet med vilje: et delt bilde gir et innlegg uten klikkbar lenke. Det var feilen pappa gjorde.
+- **Minstebestilling for levering:** 10 sekker eller ½ m³ (kubikken er ved uten sekk, målt stablet i hengeren: 1 m³ stablet ≈ 23 sekker à 60 l). Kundesida stopper bestillingen, pappa får bare en advarsel og kan lagre likevel.
 - **Frakt:** kjøreavstand fra Teigavegen 131 × 2 (tur/retur) × 3,50 kr, minst 100 kr, rundet opp til nærmeste 50 kr. Satsen er Skatteetatens skattefrie kilometersats (2025–2026). Over 100 km én vei avtales prisen.
 - **Adressesøk:** Kartverkets åpne API-er (`ws.geonorge.no/adresser`, `/stedsnavn`). **Kjøreavstand:** OSRM (`router.project-osrm.org`). Svarer ikke OSRM, brukes luftlinje × 1,4 og prisen merkes «ca.». Pappa kan alltid skrive frakten selv.
 - **Personvern:** navn, telefon og adresse på ferdige og betalte handler slettes fra pappas telefon etter 15 måneder (`slettEtterMaaneder`). Beløpene blir igjen i oversikten.
@@ -31,7 +34,7 @@ Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det 
 1. Rediger `config.js`. **Endre aldri `id` på et produkt** som har gamle bestillinger. Endre bare pris og tekst.
 2. `sh verktoy/lag_trykksaker.sh`: lager Facebook-bildet, skjermbildene, plakaten, kortene og PDF-en på nytt med de nye prisene.
 3. `sh verktoy/publiser.sh "Nye prisar"`: kjører testene, gir appen ny versjon og publiserer. Pappas app henter den nye versjonen neste gang han går til framsida.
-4. Facebook husker gamle forhåndsbilder. Lim inn https://vedfrateigen.github.io på https://developers.facebook.com/tools/debug/ og trykk «Scrape Again».
+4. Facebook husker gamle forhåndsbilder i opptil ca. 30 dager. `publiser.sh` gir `og:image` en ny `?v=` når bildet er endret, men Facebook leser sida på nytt først når noen trykker «Scrape Again»: åpne https://developers.facebook.com/tools/debug/?q=https%3A%2F%2Fvedfrateigen.github.io%2F (innlogget på Facebook) og trykk «Scrape Again».
 
 Gamle bestillinger beholder prisen de ble lagret med. En bestilling fra nettsida regnes ut med *dagens* priser når pappa åpner den. Endres prisene samme dag, kan tallet i kundens SMS derfor avvike litt fra appen. Det er med vilje, så en tuklet lenke ikke kan endre prisen.
 
@@ -55,9 +58,12 @@ swiftc -O verktoy/skjermbilder.swift -o /tmp/skjermbilder
 /tmp/skjermbilder tester/klikktester.json              # klikktester i WebKit (✘ = feil)
 python3 verktoy/lag_plakat.py https://vedfrateigen.github.io/   # A4-plakat og kort med QR-kode → leveranse/
 python3 verktoy/lag_veiledning.py                      # «Vedsal – slik fungerer det».pdf → leveranse/
+python3 verktoy/lag_huskeliste.py                      # «Vedsal – huskeliste».pdf (2 sider, til kjøleskapet)
+python3 verktoy/lag_facebookguide.py                   # «Vedsal – Facebook-guide».pdf (1 side)
 ```
 
 `verktoy/foto/`, `verktoy/bilder/`, `verktoy/bygg/` og `leveranse/` er ikke med i git. Originalfotoene kan inneholde GPS-posisjon.
+PDF-generatorene stopper med en feilmelding hvis noe går utenfor arket. Da må teksten kortes ned.
 
 ## Regler vi har sjekket (ikke juridisk rådgivning)
 
@@ -66,10 +72,11 @@ python3 verktoy/lag_veiledning.py                      # «Vedsal – slik funge
 | Merverdiavgift, 50 000 kr-grensen ([Skatteetaten](https://www.skatteetaten.no/en/business-and-organisation/reporting-and-industries/industries-special-regulations/agriculture-forestry-and-fisheries/skogbruk/drive-skogbruk/)) | Omsetning av ved over 50 000 kr i løpet av 12 måneder gir plikt til å registrere seg i Merverdiavgiftsregisteret | «Sal i år» viser siste 12 måneder mot grensen og varsler fra 40 000 kr |
 | Skatt | Inntekten skal med i skattemeldingen | Årsoversikt per måned og «Send oversikta» |
 | Personvern (GDPR) | Lagre minst mulig, kun til formålet, informere | Kundesida lagrer ingenting og har personverntekst. Appen lagrer bare på pappas telefon og sletter etter 15 måneder |
-| Markedsføring på SMS ([Forbrukertilsynet](https://www.forbrukertilsynet.no/wp-content/uploads/2018/01/Veiledning-om-markedsf%C3%B8ring-via-epost-sms-ol.pdf), markedsføringsloven § 15) | Reklame på SMS krever samtykke. Unntaket for egne kunder krever beskjed ved kjøpet og en enkel måte å si nei på | Appen sender bare svar og påminnelser om betaling, ikke reklame. Utsendelser til fjorårets kunder er ikke laget |
+| Markedsføring på SMS ([Forbrukertilsynet](https://www.forbrukertilsynet.no/wp-content/uploads/2018/01/Veiledning-om-markedsf%C3%B8ring-via-epost-sms-ol.pdf), markedsføringsloven § 15) | Reklame på SMS krever samtykke. Unntaket for egne kunder krever beskjed ved kjøpet og en enkel måte å si nei på | «Påminning neste haust» er reklame på SMS og sendes bare til kunder som har krysset av selv (aldri forhåndsavkrysset). Samtykket lagres med dato, og hver SMS har «svar NEI». Ellers sender appen bare svar og påminnelser om betaling |
+| Betingede tilbud ([Forbrukertilsynet](https://www.forbrukertilsynet.no/vi-jobber-med/prismarkedsforing/betingede-tilbud), oppdatert 18.03.2025) | Faste tilbud er lov. Det må stå tydelig at tilbudet er fast, og vilkårene skal stå der tilbudet markedsføres | «Fast tilbod» og «så lenge det er granved att» står i prislista, annonsen, påminnelsen, Facebook-bildet og plakaten. Bjørkeprisen er ikke satt opp (125 kr siden første versjon). Gratissekken holdes utenfor summen |
 | Reklame langs vei ([veglova § 33](https://lovdata.no/lov/1963-06-21-23), [Statens vegvesen](https://www.vegvesen.no/en/traffic-information/along-the-road/apply-for-roadside-advertisement/)) | Skilt som vender mot offentlig vei krever løyve | Står som merknad i idélista i PDF-en |
 | Kartdata (Kartverket, OpenStreetMap/OSRM) | Kreditering | Står nederst på kundesida |
-| Mål for ved (NS 4414, frivillig standard) | Oppgi volum (liter / løs m³) | 60 l sekk og «laust mål, ikkje stabla» står på sida |
+| Mål for ved (NS 4414, frivillig standard) | Oppgi volum (liter / m³, og om det er stablet eller løst) | 60 l sekk og «Kubikken er ved utan sekk, målt stabla i hengaren» står på sida |
 
 ## Rettigheter
 

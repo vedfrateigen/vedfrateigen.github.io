@@ -16,9 +16,11 @@
       (C.utselt || []).includes(p.id)
         ? h("div", { class: "pris utselt", text: "Utselt no" })
         : h("div", { class: "pris" }, kr(p.pris), h("span", { class: "per", text: "per " + p.eining })))),
-    ...(C.rabatt ? [h("div", { class: "prisrad rabatt" },
-      h("div", { class: "navn" }, h("span", { class: "merkelapp", text: "Tilbod" }), C.rabatt.fraAntal + " sekkar bjørk eller fleire"),
-      h("div", { class: "pris" }, kr(C.rabatt.pris), h("span", { class: "per", text: "per sekk" })))] : [])));
+    ...(Ved.tilbodNaa() ? [h("div", { class: "prisrad rabatt" },
+      h("div", {},
+        h("div", { class: "navn" }, h("span", { class: "merkelapp", text: "Fast tilbod" }), Ved.tilbodTekst() + "."),
+        h("div", { class: "detalj", text: "Gjeld heile tida – så lenge det er granved att." })),
+      h("div", { class: "pris" }, "Gratis", h("span", { class: "per", text: "opptenning" })))] : [])));
 
   /* Kalkulator og bestilling */
   let id = Ved.nyId();
@@ -37,8 +39,10 @@
     const linjer = ["Hei " + C.selgerFornavn + "! Eg vil bestille ved:", Ved.beskrivAntall(s.antall)];
     if (s.levering) linjer.push("Levering til " + (s.adresse.trim() || "(skriv adressa her)") + (s.km != null ? " (ca. " + tall(s.km) + " km)" : ""));
     else linjer.push("Eg hentar sjølv.");
-    const rp = C.rabatt && C.produkter.find((p) => p.id === C.rabatt.produkt);
-    if (rp && Ved.harRabatt(rp, s.antall, C.rabatt)) linjer.push("Rabattpris: " + kr(C.rabatt.pris) + " per " + rp.eining + " " + rp.fleirtal.split(" ")[1]);
+    const gratis = Ved.gratisFor(s);
+    for (const p of C.produkter) {
+      if (gratis[p.id] > 0) linjer.push("Tilbod: " + tall(gratis[p.id]) + " " + (gratis[p.id] === 1 ? p.eintal : p.fleirtal) + " gratis");
+    }
     linjer.push("Pris ifølgje nettsida: " + kr(b.total) + (b.fraktUkjent ? " + frakt" : ""));
     if (s.navn.trim()) linjer.push("Namn: " + s.navn.trim());
     if (s.telefon.trim()) linjer.push("Tlf: " + Ved.visTelefon(s.telefon.trim()));
@@ -51,7 +55,7 @@
   function mangler(s) {
     if (!C.produkter.some((p) => s.antall[p.id] > 0)) return "Vel kor mykje ved du vil ha (trykk +).";
     if (s.levering === null) return "Vel levering eller henting.";
-    if (s.levering && !Ved.leveringOk(s.antall)) return "Levering krev minst " + C.levering.minstSekkar + " sekkar (eller 1 m³).";
+    if (s.levering && !Ved.leveringOk(s.antall)) return "Levering krev minst " + C.levering.minstSekkar + " sekkar (eller ½ m³).";
     if (s.levering && s.adresse.trim().length < 3) return "Skriv kvar veden skal leverast.";
     if (!s.navn.trim()) return "Skriv namnet ditt.";
     return null;
@@ -108,7 +112,7 @@
 
   document.getElementById("info").append(
     infoKort("🚚", "Levering",
-      h("p", {}, h("strong", { text: "Minstebestilling for levering: " + L.minstSekkar + " sekkar (eller 1 m³). " }),
+      h("p", {}, h("strong", { text: "Minstebestilling for levering: " + L.minstSekkar + " sekkar (eller ½ m³). " }),
         "Tidspunkt avtalar vi på SMS."),
       h("p", { text: "Frakt blir rekna ut frå køyrde kilometer tur/retur: " + tall(L.krPerKm) + " kr per km" +
         (L.startpris ? " + " + kr(L.startpris) : "") + ", minst " + kr(L.minimum) + ", runda opp til næraste " + L.rundOppTil + "-lapp." }),
@@ -123,7 +127,7 @@
     infoKort("🪵", "Om veden",
       h("img", { class: "foto", src: "bilder/sekkar.jpg", alt: "Vedsekkar med bjørk og gran, klare til levering", loading: "lazy", width: "1200", height: "900" }),
       h("p", { text: "Bjørk er god fyringsved. Gran tek lett fyr og er fin til opptenning. Bjørka er kappa i 30 cm – " +
-        "det passar i dei fleste vedomnar. Sekkane er på 60 liter. Laus kubikk er målt laust, ikkje stabla." })));
+        "det passar i dei fleste vedomnar. Sekkane er på 60 liter. Kubikken er ved utan sekk, målt stabla i hengaren." })));
 
   document.getElementById("bunn").append(
     h("h2", { text: "Personvern" }),

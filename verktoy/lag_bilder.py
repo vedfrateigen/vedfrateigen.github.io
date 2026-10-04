@@ -52,6 +52,19 @@ d.text((58, 268), "frå Naustdal", font=font(92, 8), fill="white")
 for i, p in enumerate(k.C["produkter"][:3]):
     d.text((62, 400 + i * 46), p["kortnavn"] + "   " + k.kr(p["pris"]), font=font(36, 2), fill="white")
 d.text((62, 560), "Levering i Førde og Naustdal – eller hent sjølv", font=font(26, 7), fill=(225, 238, 227))
+T = k.C.get("tilbod")
+if T and "gran" not in (k.C.get("utselt") or []):
+    # Raud tilbodsmerke oppe til høgre
+    cx, cy, r = 1048, 152, 126
+    d.ellipse([cx - r + 4, cy - r + 6, cx + r + 4, cy + r + 6], fill=(0, 0, 0, 70))
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(198, 40, 40, 255))
+    d.ellipse([cx - r + 9, cy - r + 9, cx + r - 9, cy + r - 9], outline="white", width=3)
+    # «Fast tilbod» – Forbrukertilsynet: faste tilbod skal merkast som faste overalt der dei blir marknadsførte.
+    for tekst, storrelse, nr, dy in [("FAST TILBOD", 25, 8, -72), (f"Kvar {T['per']}. sekk", 23, 0, -34),
+                                     (f"bjørk gir {T['antal']} sekk", 23, 0, -6), ("granved gratis", 23, 0, 22)]:
+        fnt = font(storrelse, nr)
+        b = d.textlength(tekst, font=fnt)
+        d.text((cx - b / 2, cy + dy), tekst, font=fnt, fill="white")
 og.convert("RGB").save(os.path.join(ROT, "og-bilde.jpg"), quality=86, optimize=True)
 for f in ("bilder/stabel.jpg", "bilder/sekkar.jpg", "og-bilde.jpg"):
     print(f, os.path.getsize(os.path.join(ROT, f)) // 1024, "kB")

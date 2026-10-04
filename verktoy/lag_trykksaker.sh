@@ -14,4 +14,5 @@ qlmanage -t -s 1100 -o verktoy/bygg "leveranse/Plakat A4 – Ved frå Teigen.pdf
 mv "verktoy/bygg/Plakat A4 – Ved frå Teigen.pdf.png" verktoy/bygg/plakat-forhand.png
 python3 verktoy/lag_veiledning.py
 python3 verktoy/lag_huskeliste.py
+python3 verktoy/lag_facebookguide.py
 echo "✔ Ferdig. Filene ligg i leveranse/. Publiser nettsida med: sh verktoy/publiser.sh \"Nye prisar\""

@@ -16,7 +16,7 @@ from lag_veiledning import (BRUN, BRUN_L, BROD, DEMPET, GRONN, GRONN_L, GUL, GUL
 
 UT = os.path.join(k.ROT, "leveranse", "Vedsal – huskeliste.pdf")
 FORNAVN = k.C["selgerFornavn"]
-R = k.C.get("rabatt") or {}
+T = k.C.get("tilbod") or {}
 MINST = k.C["levering"]["minstSekkar"]
 
 
@@ -78,7 +78,7 @@ def side1(c):
     c.setFont("Av-H", 14.5)
     c.drawString(M + 16, y - 24, "Spør kunden om dette – og fyll inn medan de snakkar:")
     yy = y - 42
-    for n, t in enumerate(["<b>Kor mykje?</b> Sekkar bjørk, sekkar gran eller laus kubikk. Trykk <b>+</b>.",
+    for n, t in enumerate(["<b>Kor mykje?</b> Sekkar bjørk, sekkar gran eller stabla kubikk. Trykk <b>+</b>.",
                            "<b>Levering eller hentar sjølv?</b>",
                            "<b>Adressa</b> (ved levering). Trykk på rett forslag – frakta kjem av seg sjølv.",
                            "<b>Namn og mobilnummer.</b> Så trykkjer du <b>«Lagre bestillinga»</b>."], 1):
@@ -104,17 +104,19 @@ def side1(c):
     y = seksjonstittel(c, y, "Bestillinga kjem på SMS frå nettsida (med ei blå lenkje nedst)", GRONN)
     y = para(c, "Trykk på <b>den blå lenkja</b> nedst i SMS-en. Då opnar bestillinga seg i Vedsal, ferdig utfylt. "
              "Sjekk at alt stemmer og trykk <b>«Lagre bestillinga»</b>. Du treng ikkje skrive noko.",
-             M, y, W - 2 * M, BROD) - 16
+             M, y, W - 2 * M, BROD) - 12
 
     # Kunden er der og betalar
     y = seksjonstittel(c, y, "Kunden står der og betalar med ein gong", GRONN)
     y = para(c, "<b>«Ny bestilling»</b> › trykk <b>+</b> › nedst på sida: trykk <b>«Betalt med Vipps»</b> eller "
              "<b>«Betalt kontant»</b>. Ferdig! Salet er ført, og det kjem med i oversikta.",
-             M, y, W - 2 * M, BROD) - 14
+             M, y, W - 2 * M, BROD) - 10
 
-    boks(c, M, y, W - 2 * M, f"<b>Appen passar på for deg:</b> Frakta blir rekna ut av seg sjølv. "
-         f"Rabatten ({R.get('fraAntal', 20)} sekkar bjørk eller fleire: {k.kr(R.get('pris', 120))} per sekk) kjem av seg sjølv. "
-         f"Er ei levering under {MINST} sekkar, seier appen frå – men du kan lagre likevel.", bg=GUL, kant=GUL_K, st=KORT)
+    y = boks(c, M, y, W - 2 * M, f"<b>Appen passar på for deg:</b> Frakta blir rekna ut av seg sjølv. "
+             f"Gratissekken i tilbodet (kvar {T.get('per', 10)}. sekk bjørk gir {T.get('antal', 1)} sekk granved) kjem av seg sjølv "
+             f"og står under namnet til kunden – ikkje trykk + på gran for han. "
+             f"Er ei levering under {MINST} sekkar, seier appen frå, men du kan lagre likevel.", bg=GUL, kant=GUL_K, st=KORT)
+    assert y >= 34, f"Side 1 går over arket (y = {y:.0f})"
 
 
 def side2(c):
@@ -128,29 +130,30 @@ def side2(c):
         ("Du trykte feil", "«Angre» nedst på skjermen – med ein gong. Elles: «Endre»."),
         ("Du gjekk ut før du lagra", "Ingen fare. Trykk «Hald fram» på framsida."),
         ("Kunden vil ha kvittering", "«Ferdige og betalte» (nedst på framsida) › «Kvittering»."),
-        ("Vennepris eller avtalt pris", "Under summen: «Endre totalprisen» › skriv beløpet."),
+        ("Vennepris eller avtalt pris", "Under summen: «Endre totalprisen» › skriv beløpet. Òg når nokon viser til ein gammal pris."),
         ("Du leverer til fleire på same tur", "«Endre frakt» på kvar bestilling › skriv beløpet."),
         ("Ingen dekning", "Appen verkar likevel. Adressa blir ikkje funnen – skriv frakta sjølv."),
-        ("Tomt for gran eller bjørk", "Sei frå til Benjamin – då står det «Utselt no» på nettsida."),
+        ("Tomt for gran eller bjørk", "Sei frå til Benjamin. Då står det «Utselt no» på nettsida, og tilbodet stoppar av seg sjølv."),
         ("Appen minner om tryggingskopi", "«Send tryggingskopi no» › vel Benjamin (SMS eller Messenger)."),
-        ("Du vil ha ut ei annonse", "«Facebook-annonse» › vel bilete › «Del på Facebook» › vel Facebook › lim inn teksten."),
+        ("Du vil ha ut ei annonse", "«Facebook-annonse» › «Kopier annonsen». Sjå Facebook-guiden."),
         ("Kunden vil ha påminning neste haust", "Kryss av i bestillinga (spør først). Neste haust minner appen deg på å sende SMS."),
     ]
     kol1 = 190
     kol2 = W - 2 * M - kol1 - 16
     for i, (sit, gjer) in enumerate(rader):
         hh = max(hoyde(gjer, kol2, stil("g", fontSize=11.5, leading=15.5)),
-                 hoyde(sit, kol1 - 20, stil("s", fontName="Av-D", fontSize=11.5, leading=15.5))) + 12
+                 hoyde(sit, kol1 - 20, stil("s", fontName="Av-D", fontSize=11.5, leading=15.5))) + 9
         if i % 2 == 0:
             c.setFillColor(KREM)
             c.roundRect(M, y - hh, W - 2 * M, hh, 8, fill=1, stroke=0)
-        para(c, sit, M + 12, y - 6, kol1 - 20, stil("s", fontName="Av-D", fontSize=11.5, leading=15.5))
-        para(c, gjer, M + kol1 + 4, y - 6, kol2, stil("g", fontSize=11.5, leading=15.5))
+        para(c, sit, M + 12, y - 4.5, kol1 - 20, stil("s", fontName="Av-D", fontSize=11.5, leading=15.5))
+        para(c, gjer, M + kol1 + 4, y - 4.5, kol2, stil("g", fontSize=11.5, leading=15.5))
         y -= hh + 1
     y -= 14
 
     # Gylne reglar
     hh = 150
+    assert y - hh >= 34, f"Side 2 går over arket (botn på y = {y - hh:.0f})"
     c.setFillColor(GRONN)
     c.roundRect(M, y - hh, W - 2 * M, hh, 16, fill=1, stroke=0)
     c.setFillColor(white)
@@ -161,7 +164,7 @@ def side2(c):
     for n, t in enumerate(["<b>Alt sal inn i Vedsal</b> – òg dei som hentar og betalar med ein gong.",
                            "Trykk <b>«Ferdig»</b> når veden er levert eller henta.",
                            "Trykk <b>«Betalt»</b> når pengane er komne.",
-                           "<b>Du kan ikkje øydeleggje noko.</b> Lurer du på noko? Ring Benjamin – 913 47 058."], 1):
+                           "<b>Du kan ikkje øydeleggje noko.</b> Lurer du på noko? Ring Benjamin – 913&nbsp;47&nbsp;058."], 1):
         nummer(c, M + 32, yy - 8, n, r=10, farge=BRUN)
         yy = para(c, t, M + 52, yy, W - 2 * M - 72, hvit) - 6
 

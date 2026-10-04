@@ -48,24 +48,49 @@ test("gamle priser i en lagret bestilling brukes, ikke dagens", () => {
   assert.equal(V.varesum({ sekk: 2, gran: 0, m3: 0 }, { sekk: 100, gran: 70, m3: 1800 }), 200);
 });
 
-test("rabatt: 20 sekkar bjørk eller fleire kostar 120 kr per sekk", () => {
-  assert.equal(V.beregn({ antall: { sekk: 19 }, levering: false }).ved, 19 * 125);
-  assert.equal(V.beregn({ antall: { sekk: 20 }, levering: false }).ved, 20 * 120);
-  assert.equal(V.beregn({ antall: { sekk: 25, gran: 5 }, levering: false }).ved, 25 * 120 + 5 * 79);
-  assert.equal(V.beregn({ antall: { sekk: 10, gran: 15 }, levering: false }).ved, 10 * 125 + 15 * 79); // gran tel ikkje
+test("tilbod: kvar 10. sekk bjørk gir 1 sekk gran gratis – og summen er uendra", () => {
+  const g = (sekk, gran) => ({ ...V.gratisFor({ antall: { sekk, gran: gran || 0 }, levering: false }) });
+  assert.deepEqual(g(9), {});
+  assert.deepEqual(g(10), { gran: 1 });
+  assert.deepEqual(g(19), { gran: 1 });
+  assert.deepEqual(g(20), { gran: 2 });
+  assert.deepEqual(g(35), { gran: 3 });
+  assert.deepEqual(g(5, 12), {}); // gransekkar tel ikkje
+  assert.equal(V.beregn({ antall: { sekk: 10 }, levering: false }).ved, 10 * 125); // bjørk kostar framleis 125
+  assert.equal(V.beregn({ antall: { sekk: 20 }, levering: false }).total, 20 * 125); // 120-kr-rabatten er borte
+  assert.equal(V.beskrivAntall({ sekk: 10 }, { gran: 1 }), "10 sekkar bjørk + 1 sekk gran gratis");
 });
 
-test("rabatt: gamle bestillingar utan rabatt blir ikkje endra, nye får rabatten", () => {
-  const gamal = { antall: { sekk: 25 }, levering: false, priser: { sekk: 125, gran: 79, m3: 2000 } };
-  assert.equal(V.beregn(gamal).ved, 25 * 125);
-  assert.equal(V.beregn({ ...gamal, rabatt: V.C.rabatt }).ved, 25 * 120);
+test("tilbod: lagra bestillingar beheld regelen dei vart laga med", () => {
+  const priser = { sekk: 125, gran: 79, m3: 2000 };
+  assert.deepEqual({ ...V.gratisFor({ antall: { sekk: 20 }, priser }) }, {}); // før tilbodet: ingen gratis
+  assert.deepEqual({ ...V.gratisFor({ antall: { sekk: 20 }, priser, tilbod: V.C.tilbod }) }, { gran: 2 });
+  const gamal = { antall: { sekk: 25 }, levering: false, priser, rabatt: { produkt: "sekk", fraAntal: 20, pris: 120 } };
+  assert.equal(V.beregn(gamal).ved, 25 * 120); // gamal 120-kr-rabatt held seg
 });
 
-test("minstebestilling for levering: 10 sekkar eller 1 m³", () => {
+test("tilbod: same tekst overalt, merka som fast tilbod med vilkår", () => {
+  assert.equal(V.tilbodTekst(), "Kvar 10. sekk bjørk gir 1 sekk granved gratis");
+  assert.equal(V.tilbodTekst(true), "Fast tilbod: kvar 10. sekk bjørk gir 1 sekk granved gratis – så lenge det er granved att");
+});
+
+test("tilbod: pause når gratisvara er utselt", () => {
+  V.C.utselt = ["gran"];
+  try {
+    assert.equal(V.tilbodNaa(), null);
+    assert.deepEqual({ ...V.gratisFor({ antall: { sekk: 30 } }) }, {});
+    assert.equal(V.tilbodTekst(true), "");
+  } finally {
+    V.C.utselt = [];
+  }
+});
+
+test("minstebestilling for levering: 10 sekkar eller ½ m³ stabla", () => {
   assert.equal(V.leveringOk({ sekk: 9 }), false);
   assert.equal(V.leveringOk({ sekk: 10 }), true);
   assert.equal(V.leveringOk({ sekk: 6, gran: 4 }), true);
-  assert.equal(V.leveringOk({ m3: 0.5 }), false);
+  assert.equal(V.leveringOk({ m3: 0.4 }), false);
+  assert.equal(V.leveringOk({ m3: 0.5 }), true); // ½ m³ stabla ≈ 11,5 sekkar
   assert.equal(V.leveringOk({ m3: 1 }), true);
   assert.equal(V.leveringOk({ m3: 0.5, gran: 2 }), true);
 });
@@ -87,7 +112,7 @@ test("samtykke til påminning følgjer med lenka – og manglar det, er det nei"
 });
 
 test("tekst på nynorsk", () => {
-  assert.equal(V.beskrivAntall({ sekk: 10, gran: 1, m3: 1.5 }), "10 sekkar bjørk og 1 sekk gran og 1,5 m³ laus bjørk");
+  assert.equal(V.beskrivAntall({ sekk: 10, gran: 1, m3: 1.5 }), "10 sekkar bjørk og 1 sekk gran og 1,5 m³ stabla bjørk");
   assert.equal(V.kr(1658), "1" + nbsp + "658" + nbsp + "kr");
 });
 

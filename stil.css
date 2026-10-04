@@ -176,8 +176,10 @@ textarea.felt { min-height: 80px; resize: vertical; }
 .avkryss-rad { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; margin-bottom: 14px;
   border: 2px solid var(--linje); border-radius: 12px; background: var(--kort); cursor: pointer; }
 .avkryss { flex: none; width: 26px; height: 26px; margin: 1px 0 0; accent-color: var(--gronn); }
-.galleri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.bilete-val { padding: 0; border: 3px solid transparent; border-radius: 12px; background: none; cursor: pointer; text-align: center; }
-.bilete-val img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 9px; }
-.bilete-val span { display: block; font-size: .8em; font-weight: 700; padding: 4px 0; }
-.bilete-val[aria-pressed="true"] { border-color: var(--gronn); background: var(--gronn-lys); }
+.sum-tabell .gratis-rad td { color: var(--gronn); font-weight: 700; }
+.tilbod-tips { color: var(--gronn) !important; font-weight: 700; }
+.fb-steg { display: flex; gap: 12px; align-items: flex-start; background: var(--kort); border: 1px solid var(--linje); border-radius: 14px; padding: 14px; }
+.fb-steg > div { flex: 1; min-width: 0; }
+.fb-steg p { margin: 0; }
+.fb-steg .hint { margin-top: 10px; }
+.annonse-tekst { white-space: pre-wrap; background: var(--bg); border-radius: 10px; padding: 10px 12px; font-size: .88em; margin-top: 4px !important; overflow-wrap: anywhere; }

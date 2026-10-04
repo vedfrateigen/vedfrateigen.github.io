@@ -1,5 +1,18 @@
 # Endringslogg – Vedsal
 
+## 2026-10-04 – Fast tilbud, stablet kubikk og enklere Facebook
+
+- Fast tilbud erstatter 120-kr-rabatten: for hver 10. sekk bjørk får kunden 1 sekk granved gratis, uten tak. Det står som «Fast tilbod: … – så lenge det er granved att» i prislista, annonsen, påminnelsen, Facebook-bildet og plakaten (Forbrukertilsynet om betingede tilbud). Gratissekken vises i kalkulatoren, i SMS-en og på kortet, men ikke i summen. Gamle bestillinger beholder reglene de ble lagret med.
+- Utselt gran setter tilbudet på pause. Annonsen og påminnelsen nevner da bare det som er igjen, og pappa ser «Tilbodet er på pause».
+- Kubikken heter nå «Stabla kubikk bjørk (m³)»: ved uten sekk, målt stablet i hengeren. Minstebestilling for levering er 10 sekker eller ½ m³ (1 m³ stablet ≈ 23 sekker).
+- Facebook-annonsen er forenklet. Pappa kopierer én kort tekst med lenke og telefonnummer, limer den inn én gang, og Facebook lager bildet selv. Bildevalget er fjernet, fordi et delt bilde ga innlegg uten klikkbar lenke. Stegene advarer mot «Selg noe», skjermbilder og flere innliminger, og sier hva som er normalt (ingen forhåndsvisning, venter på godkjenning). Dobbel tekst slettes med sletteknappen («Merk alt»/«Slett» finnes ikke i menyen på Samsung).
+- Lenka i annonsen og påminnelsen kommer nå fra `nettside` i `config.js`. Skjermbildet i veiledningen viste en lokal filsti.
+- Ny «Vedsal – Facebook-guide».pdf (1 side). Side 2 i huskelista gikk utenfor arket og er kortet ned. Huskeliste, Facebook-guide og veiledning (side 5) stopper nå med feil i stedet for å lage et avkuttet ark.
+- Opphavsrett: «© 2026 Benjamin Bruflot Teigen · 913 47 058» i LICENSE, kodefilene, nettsida, appen og PDF-ene.
+- `publiser.sh` gir `og:image` en ny `?v=` når Facebook-bildet er endret.
+- «Slik skal appen se ut.png» er flyttet til `verktoy/bygg/`, fordi den viste gamle priser.
+- Tester: 17 enhetstester og 28 klikktester, alle grønne. QR-koden er kontrollert (plakat 1, kort 10).
+
 ## 2026-09-29 – Påminning neste haust, bilete i annonsen, målingar
 
 - Påminning neste haust, med samtykke (markedsføringsloven § 15): avkryssing på kundesida (aldri forhåndsavkrysset) og i pappas skjema. Samtykket følger med SMS-lenka og lagres med dato. «Sal i år» › «Påminning neste haust» viser kundene med «Send» (ferdig SMS med «svar NEI») og «Vil ikkje ha». Framsida minner om det 15. aug.–31. okt., men bare for kunder som ikke har handlet de siste 150 dagene.

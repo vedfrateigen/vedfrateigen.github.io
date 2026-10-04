@@ -19,12 +19,13 @@
     return Object.fromEntries(C.produkter.map((p) => [p.id, p.pris]));
   }
 
-  // "10 sekkar bjørk og 1,5 m³ laus bjørk"
-  function beskrivAntall(antall) {
-    const deler = C.produkter
-      .filter((p) => antall[p.id] > 0)
-      .map((p) => tall(antall[p.id]) + " " + (antall[p.id] === 1 ? p.eintal : p.fleirtal));
-    return deler.join(" og ") || "ingenting valt";
+  // "10 sekkar bjørk og 1,5 m³ stabla bjørk"
+  // gratis (valfritt): det kunden får med på kjøpet, t.d. { gran: 1 } → «… + 1 sekk gran gratis».
+  function beskrivAntall(antall, gratis) {
+    const tekst = (n, p) => tall(n) + " " + (n === 1 ? p.eintal : p.fleirtal);
+    const deler = C.produkter.filter((p) => antall[p.id] > 0).map((p) => tekst(antall[p.id], p));
+    const gaver = gratis ? C.produkter.filter((p) => gratis[p.id] > 0).map((p) => tekst(gratis[p.id], p) + " gratis") : [];
+    return (deler.join(" og ") || "ingenting valt") + (gaver.length ? " + " + gaver.join(" og ") : "");
   }
 
   // Pris per enhet. Kjøper kunden rabatt.fraAntal eller flere av rabattproduktet, gjelder rabattprisen for alle.
@@ -42,10 +43,35 @@
   // Bestillinger lagret før rabatten fantes, har priser men ingen rabatt – de regnes uten rabatt.
   const rabattFor = (s) => (s.priser ? s.rabatt || null : C.rabatt);
 
-  // Hvor mange sekker bestillingen tilsvarer (løs kubikk regnes om etter volum).
+  // Tilbud: for hver «per» kjøpte av «kjop» får kunden «antal» av «gratis» uten å betale.
+  // Lagrede bestillinger beholder tilbudet slik det var da de ble laget. Er gratisvaren utsolgt, er tilbudet på pause.
+  const tilbodNaa = () => (C.tilbod && !(C.utselt || []).includes(C.tilbod.gratis) ? C.tilbod : null);
+  const tilbodFor = (s) => (s.priser ? s.tilbod || null : tilbodNaa());
+  // «Kvar 10. sekk bjørk gir 1 sekk granved gratis» – tom streng når det ikkje er noko tilbod (eller det er på pause).
+  // fast = slik det står i annonsar og SMS: «Fast tilbod: …» med vilkåret (Forbrukertilsynet om betingede tilbud).
+  function tilbodTekst(fast) {
+    const t = tilbodNaa();
+    const kp = t && C.produkter.find((p) => p.id === t.kjop), gp = t && C.produkter.find((p) => p.id === t.gratis);
+    if (!kp || !gp) return "";
+    const vare = gp.vedtype || gp.fleirtal;
+    const tekst = "Kvar " + t.per + ". " + kp.eintal + " gir " + t.antal + " sekk " + vare + " gratis";
+    return fast ? "Fast tilbod: k" + tekst.slice(1) + " – så lenge det er " + vare + " att" : tekst;
+  }
+
+  function gratisFor(s) {
+    const g = {};
+    const t = tilbodFor(s);
+    if (t) {
+      const n = Math.floor((Number(s.antall && s.antall[t.kjop]) || 0) / t.per) * t.antal;
+      if (n > 0) g[t.gratis] = n;
+    }
+    return g;
+  }
+
+  // Hvor mange sekker bestillingen tilsvarer (kubikk regnes om etter volum, se sekkPerEining i config.js).
   function sekkEkvivalent(antall) {
     return C.produkter.reduce((sum, p) =>
-      sum + (Number(antall[p.id]) || 0) * (p.eining === "m³" ? 1000 / C.literPerSekk : 1), 0);
+      sum + (Number(antall[p.id]) || 0) * (p.sekkPerEining != null ? p.sekkPerEining : p.eining === "m³" ? 1000 / C.literPerSekk : 1), 0);
   }
 
   const leveringOk = (antall) => sekkEkvivalent(antall) >= C.levering.minstSekkar - 1e-9;
@@ -67,7 +93,7 @@
     // Pappa kan avtale en annen totalpris (vennepris o.l.). Veden får resten, så summene i oversikten går opp.
     const avtalt = s.manuellTotal != null && isFinite(s.manuellTotal);
     if (avtalt) { total = s.manuellTotal; ved = total - (frakt || 0); }
-    return { ved, frakt, total, fraktUkjent: frakt == null, avtalt };
+    return { ved, frakt, total, fraktUkjent: frakt == null, avtalt, gratis: gratisFor(s) };
   }
 
   function nyId() {
@@ -619,6 +645,10 @@
             (harRabatt(p, s.antall, rabatt) ? " (rabatt)" : ""), kr(s.antall[p.id] * pris)]);
         }
       }
+      for (const p of C.produkter) {
+        const n = b.gratis[p.id];
+        if (n > 0) rader.push([tall(n) + " " + (n === 1 ? p.eintal : p.fleirtal) + " – tilbod", "gratis", "gratis-rad"]);
+      }
       if (s.levering === true) rader.push(["Frakt", b.fraktUkjent ? "etter avtale" : kr(b.frakt)]);
       if (s.levering === false) rader.push([pappa ? "Hentar sjølv" : "Du hentar sjølv", "0 kr"]);
       oppsummering.replaceChildren();
@@ -627,15 +657,22 @@
         return;
       }
       const tabell = h("table", { class: "sum-tabell" });
-      for (const [a, b2] of rader) tabell.append(h("tr", {}, h("td", { text: a }), h("td", { text: b2 })));
+      for (const [a, b2, klasse] of rader) tabell.append(h("tr", { class: klasse }, h("td", { text: a }), h("td", { text: b2 })));
       tabell.append(h("tr", { class: "sum-total" }, h("td", { text: "Totalt" + (b.avtalt ? " (avtalt pris)" : b.fraktUkjent ? " (utan frakt)" : "") }), h("td", { text: kr(b.total) })));
       oppsummering.append(tabell);
+      if (pappa && C.tilbod && !tilbodNaa() && !tilbodFor(s)) {
+        oppsummering.append(h("p", { class: "hint", text: "Tilbodet er på pause fordi granveden er utselt." }));
+      }
       if (!pappa && s.levering === null) oppsummering.append(h("p", { class: "hint", text: "Vel levering eller henting over." }));
-      const rp = rabatt && C.produkter.find((p) => p.id === rabatt.produkt);
-      const n = rp ? s.antall[rp.id] : 0;
-      if (!pappa && rp && n >= rabatt.fraAntal - 5 && n < rabatt.fraAntal) {
-        oppsummering.append(h("p", { class: "hint", text: "Tips: Kjøper du " + rabatt.fraAntal + " " + rp.fleirtal +
-          " eller fleire, kostar kvar sekk berre " + kr(rabatt.pris) + "." }));
+      const t = tilbodFor(s);
+      const kp = t && C.produkter.find((p) => p.id === t.kjop);
+      const gp = t && C.produkter.find((p) => p.id === t.gratis);
+      const n = kp ? Number(s.antall[kp.id]) || 0 : 0;
+      const neste = t ? (Math.floor(n / t.per) + 1) * t.per : 0;
+      if (!pappa && kp && gp && n > 0 && neste - n <= 3) {
+        const fleire = (neste / t.per) * t.antal;
+        oppsummering.append(h("p", { class: "hint tilbod-tips", text: "Tips: Kjøper du " + neste + " " + kp.fleirtal + ", får du " +
+          fleire + " " + (fleire === 1 ? gp.eintal.replace("sekk gran", "sekk granved") : gp.fleirtal.replace("sekkar gran", "sekkar granved")) + " gratis." }));
       }
     }
 
@@ -644,8 +681,8 @@
       const forLite = s.levering === true && C.produkter.some((p) => s.antall[p.id] > 0) && !leveringOk(s.antall);
       minsteLinje.hidden = !forLite;
       minsteLinje.textContent = pappa
-        ? "Obs: Minstebestilling for levering er " + C.levering.minstSekkar + " sekkar (eller 1 m³). Du kan lagre likevel."
-        : "Levering krev minst " + C.levering.minstSekkar + " sekkar (eller 1 m³). Legg til fleire – eller vel «Eg hentar sjølv».";
+        ? "Obs: Minstebestilling for levering er " + C.levering.minstSekkar + " sekkar (eller ½ m³). Du kan lagre likevel."
+        : "Levering krev minst " + C.levering.minstSekkar + " sekkar (eller ½ m³). Legg til fleire – eller vel «Eg hentar sjølv».";
     }
 
     if (s.levering !== null) velgLevering(s.levering); else tegnOppsummering();
@@ -688,7 +725,7 @@
 
   window.Ved = {
     C, tall, kr, rund1, tomtAntall, naaPriser, beskrivAntall, harRabatt, einingspris, varesum, sekkEkvivalent, leveringOk,
-    rabattFor, leveringspris, beregn, nyId,
+    rabattFor, tilbodNaa, tilbodFor, tilbodTekst, gratisFor, leveringspris, beregn, nyId,
     telefonLenke, visTelefon, smsLenke, kartLenke, klamp, ordreTilParam, paramTilOrdre,
     luftlinjeKm, kjoreavstand, tolkAdresse, sokAdresse, h, visMelding, skjulMelding, kopier, del, lagSkjema,
     registrerOffline, oppdatering,

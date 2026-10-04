@@ -5,6 +5,10 @@
 set -e
 cd "$(dirname "$0")/.."
 node tester/test.mjs >/dev/null && echo "✔ tester OK"
+# Nytt Facebook-bilde? Da får og:image ny ?v=, så Facebook henter det nye bildet ved neste «Scrape Again».
+if ! git diff --quiet HEAD -- og-bilde.jpg; then
+  sed -i '' "s/og-bilde\.jpg?v=[0-9]*/og-bilde.jpg?v=$(date +%Y%m%d%H%M)/" index.html
+fi
 # Ny cache-versjon gjør at pappas app henter den nye versjonen neste gang den åpnes.
 sed -i '' "s/^const CACHE = \".*\";/const CACHE = \"vedsal-$(date +%Y-%m-%d-%H%M)\";/" sw.js
 git add -A

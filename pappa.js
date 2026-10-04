@@ -93,7 +93,8 @@
   const ikon = (t) => h("span", { class: "knapp-ikon", "aria-hidden": "true" }, t);
   const dato = (iso) => new Date(iso).toLocaleDateString("nn-NO", { day: "numeric", month: "short" });
   const fornavn = (navn) => (navn || "").trim().split(/\s+/)[0] || "";
-  const nettside = () => new URL("./", location.href).href;
+  // Fast adresse frå config.js, så lenkja i annonsen er rett same kvar appen er opna frå.
+  const nettside = () => C.nettside || new URL("./", location.href).href;
   const stor = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
   function prisTekst(o) {
@@ -218,7 +219,7 @@
       ferdige.length ? h("details", { class: "ferdige" },
         h("summary", { text: "Ferdige og betalte (" + ferdige.length + ")" }),
         ferdige.slice(0, 30).map((o) => h("div", { class: "ferdig-rad" },
-          h("span", { text: dato(o.ferdig) + " · " + (o.navn || "Kunde") + " · " + Ved.beskrivAntall(o.antall) + " · " + kr(o.total) + (o.betalt === "vipps" ? " · Vipps" : " · kontant") }),
+          h("span", { text: dato(o.ferdig) + " · " + (o.navn || "Kunde") + " · " + Ved.beskrivAntall(o.antall, Ved.gratisFor(o)) + " · " + kr(o.total) + (o.betalt === "vipps" ? " · Vipps" : " · kontant") }),
           o.anonym ? null : h("span", { class: "ferdig-lenker" },
             o.telefon ? h("a", { class: "lenkeknapp", href: Ved.smsLenke(o.telefon, kvittering(o)) }, "Kvittering") : null,
             h("a", { class: "lenkeknapp", href: "#/endre/" + o.id }, "Endre"))))) : null,
@@ -230,7 +231,7 @@
       h("div", { class: "ordre-topp" },
         h("h3", { class: "ordre-navn", text: o.navn || "Kunde utan namn" }),
         h("a", { class: "lenkeknapp", href: "#/endre/" + o.id }, "Endre")),
-      h("p", { class: "ordre-hva", text: Ved.beskrivAntall(o.antall) }),
+      h("p", { class: "ordre-hva", text: Ved.beskrivAntall(o.antall, Ved.gratisFor(o)) }),
       h("p", { class: "ordre-hvor", text: hvorTekst(o) }),
       o.notat ? h("p", { class: "ordre-notat", text: "«" + o.notat + "»" }) : null,
     ];
@@ -288,7 +289,7 @@
   }
 
   function kvittering(o) {
-    return "Kvittering frå " + C.navn + "\n" + Ved.beskrivAntall(o.antall) + (o.levering ? " (med levering)" : "") +
+    return "Kvittering frå " + C.navn + "\n" + Ved.beskrivAntall(o.antall, Ved.gratisFor(o)) + (o.levering ? " (med levering)" : "") +
       "\nBetalt: " + kr(o.total) + " med " + (o.betalt === "vipps" ? "Vipps" : "kontant") + " " +
       new Date(o.betaltDato || o.ferdig).toLocaleDateString("nn-NO") +
       "\nTakk for handelen!\nHelsing " + C.selgerFornavn + ", " + C.navn;
@@ -312,7 +313,7 @@
         h("a", { class: "knapp primar stor", href: "#/", style: "margin-top:16px" }, "Til framsida"));
       return;
     }
-    skjemaSide(Object.assign(o, { priser: Ved.naaPriser(), rabatt: C.rabatt }), "nettside");
+    skjemaSide(Object.assign(o, { priser: Ved.naaPriser(), rabatt: C.rabatt, tilbod: Ved.tilbodNaa() }), "nettside");
   }
 
   function fortsettUtkast() {
@@ -338,7 +339,7 @@
     const skjema = Ved.lagSkjema({
       modus: "pappa",
       kundar: redigerer || fraNettside ? [] : tidlegareKundar(),
-      start: fraUtkast || eksisterende || { priser: Ved.naaPriser(), rabatt: C.rabatt },
+      start: fraUtkast || eksisterende || { priser: Ved.naaPriser(), rabatt: C.rabatt, tilbod: Ved.tilbodNaa() },
       vedEndring: (s) => {
         endra = true;
         if (!redigerer && !lagret) lagreUtkast({ s, kilde, id: fraNettside ? eksisterende.id : null, tid: Date.now() });
@@ -366,6 +367,7 @@
         kilde: forrige.kilde || (fraNettside ? "nettside" : betaltNo ? "innom" : "app"),
         navn: s.navn.trim(), telefon: s.telefon.trim(),
         antall: Object.assign({}, s.antall), priser: s.priser || Ved.naaPriser(), rabatt: Ved.rabattFor(s),
+        tilbod: Ved.tilbodFor(s), gratis: Ved.gratisFor(s),
         levering: s.levering,
         adresse: s.levering ? s.adresse.trim() : "", punkt: s.levering ? s.punkt : null,
         km: s.levering ? s.km : null, omtrent: s.levering ? s.omtrent : false,
@@ -412,6 +414,10 @@
           const rabatt = Ved.harRabatt(p, s.antall, Ved.rabattFor(s)) ? " (rabattpris " + kr(pris) + " per " + p.eining + ")" : "";
           linjer.push(tall(n) + " " + (n === 1 ? p.eintal : p.fleirtal) + ": " + kr(n * pris) + rabatt);
         }
+      }
+      const gratis = Ved.gratisFor(s);
+      for (const p of C.produkter) {
+        if (gratis[p.id] > 0) linjer.push(tall(gratis[p.id]) + " " + (gratis[p.id] === 1 ? p.eintal : p.fleirtal) + ": gratis (tilbod)");
       }
       if (s.levering) linjer.push("Levering" + (s.adresse.trim() ? " til " + s.adresse.trim() : "") + ": " + (b.fraktUkjent ? "etter avtale" : kr(b.frakt)));
       linjer.push("Totalt: " + kr(b.total) + (b.fraktUkjent ? " + frakt" : ""));
@@ -473,97 +479,68 @@
 
   /* ---------- Facebook-annonse ---------- */
 
-  function annonsetekst() {
-    const eks = C.eksempler.filter((e) => e.km <= 40).map((e) => e.sted + " " + kr(Ved.leveringspris(e.km))).join(", ");
-    const linjer = ["🔥 Tørr ved til sals!", ""];
-    for (const p of C.produkter) linjer.push("🪵 " + p.annonse + ": " + kr(p.pris));
-    const rp = C.rabatt && C.produkter.find((p) => p.id === C.rabatt.produkt);
-    if (rp) linjer.push("💰 " + C.rabatt.fraAntal + " " + rp.fleirtal + " eller fleire: " + kr(C.rabatt.pris) + " per " + rp.eining);
-    linjer.push("",
-      "🚚 Levering i Naustdal og Førde frå " + C.levering.minstSekkar + " sekkar – frakt etter avstand" + (eks ? " (" + eks + ")" : "") + ". Andre stader etter avtale.",
-      "🏠 Eller hent sjølv i Naustdal.",
-      "💳 " + (C.vipps ? "Vipps eller kontant." : "Kontant."), "");
-    if (C.telefon) linjer.push("📱 Send SMS eller ring " + C.selgerFornavn + ": " + Ved.visTelefon(C.telefon));
-    linjer.push("👉 Rekn ut prisen og bestill her: " + nettside());
+  // «bjørkeved og granved» – berre det som ikkje er utselt.
+  function vedtypar() {
+    const typar = C.produkter.filter((p) => !(C.utselt || []).includes(p.id)).map((p) => p.vedtype).filter(Boolean);
+    return [...new Set(typar)].join(" og ") || "ved";
+  }
+
+  // Kort annonse med lenkja – limast inn éin gong. Facebook lagar sjølv eit bilete med prisane frå lenkja (og-bilde.jpg).
+  // Eigne bilete er tekne bort med vilje: eit delt bilete blir eit innlegg utan klikkbar lenkje.
+  function facebookTekst() {
+    const linjer = ["🔥 Tørr " + vedtypar() + " til sals frå Naustdal!"];
+    if (Ved.tilbodTekst(true)) linjer.push("🎁 " + Ved.tilbodTekst(true) + ".");
+    linjer.push("🚚 Levering i Naustdal og Førde – eller hent sjølv.");
+    linjer.push("👉 Sjå prisar og bestill her: " + nettside());
+    linjer.push("📞 Eller ring " + C.selgerFornavn + ": " + Ved.visTelefon(C.telefon));
     return linjer.join("\n");
   }
 
-  // Bileta pappa kan velje mellom i annonsen. «Med prisar» blir laga på nytt frå config.js (verktoy/lag_bilder.py).
-  const ANNONSEBILETE = [
-    { fil: "og-bilde.jpg", namn: "Med prisar" },
-    { fil: "bilder/sekkar.jpg", namn: "Sekkane" },
-    { fil: "bilder/stabel.jpg", namn: "Vedstabelen" },
-  ];
-
   function facebookSide() {
     settTittel("Facebook-annonse", true);
-    const felt = h("textarea", { class: "felt annonse", value: annonsetekst(), "aria-label": "Annonsetekst" });
-    let valt = 0;
-    // Biletet blir henta på førehand, så «Del» skjer med ein gong etter trykket (krav frå nettlesaren).
-    const blobar = {};
-    const hent = (i) => {
-      if (!blobar[i]) blobar[i] = fetch(ANNONSEBILETE[i].fil).then((r) => r.blob()).catch(() => null);
-      return blobar[i];
-    };
-    hent(0);
-
-    const val = ANNONSEBILETE.map((b, i) => h("button", {
-      type: "button", class: "bilete-val", "aria-pressed": String(i === valt), "aria-label": "Vel biletet «" + b.namn + "»",
-      onclick: () => {
-        valt = i;
-        val.forEach((knapp, j) => knapp.setAttribute("aria-pressed", String(j === i)));
-        hent(i);
-      },
-    }, h("img", { src: b.fil, alt: "", loading: "lazy" }), h("span", { text: b.namn })));
-
-    async function delPaaFacebook() {
-      const kopiert = await Ved.kopier(felt.value);
-      const blob = await hent(valt);
-      if (blob) {
-        const fil = new File([blob], "ved-fra-teigen.jpg", { type: blob.type || "image/jpeg" });
-        if (navigator.canShare && navigator.canShare({ files: [fil] })) {
-          try {
-            await navigator.share({ files: [fil], text: felt.value });
-            Ved.visMelding(kopiert ? "Teksten er kopiert – hald fingeren i tekstfeltet på Facebook og vel «Lim inn»." : "Skriv teksten på Facebook.");
-            return;
-          } catch (e) {
-            if (e && e.name === "AbortError") return;
-          }
-        }
-      }
-      // Reserve: last ned biletet, så han kan leggje det ved sjølv.
-      const a = h("a", { href: ANNONSEBILETE[valt].fil, download: "ved-fra-teigen.jpg" });
-      document.body.append(a);
-      a.click();
-      a.remove();
-      Ved.visMelding("Biletet er lasta ned" + (kopiert ? " og teksten er kopiert" : "") + ". Opne Facebook, legg ved biletet og lim inn teksten.");
-    }
+    const tekst = facebookTekst();
+    const steg = (nr, ...innhald) => h("div", { class: "fb-steg" },
+      h("span", { class: "steg-nr", "aria-hidden": "true" }, String(nr)), h("div", {}, ...innhald));
+    const ikkje = (t) => h("p", { style: "margin:0 0 4px", text: "✗ " + t });
 
     vis(h("div", { class: "stabel" },
-      h("p", { text: "1. Vel eit bilete:" }),
-      h("div", { class: "galleri" }, val),
-      h("p", { text: "2. Sjekk teksten (du kan endre han):" }),
-      felt,
-      h("button", { class: "knapp primar stor", type: "button", onclick: delPaaFacebook }, ikon("📣"), "Del på Facebook"),
-      h("p", { class: "boks-gronn" }, h("strong", { text: "Slik gjer du: " }),
-        "Trykk «Del på Facebook» og vel Facebook. Biletet kjem med av seg sjølv. Teksten er alt kopiert – " +
-        "hald fingeren i tekstfeltet og vel «Lim inn». Legg annonsen ut på nytt når det blir kaldt."),
-      h("button", { class: "knapp", type: "button", onclick: async () => {
-        const ok = await Ved.kopier(felt.value);
-        Ved.visMelding(ok ? "Teksten er kopiert." : "Klarte ikkje å kopiere.");
-      } }, ikon("📋"), "Berre kopier teksten")));
+      h("p", { text: "Slik legg du ut annonsen i ei Facebook-gruppe. Gjer stega i rekkjefølgje." }),
+      steg(1, h("button", { class: "knapp primar stor", type: "button", onclick: async () => {
+        const ok = await Ved.kopier(tekst);
+        Ved.visMelding(ok ? "Kopiert ✔ Gå vidare til steg 2." : "Klarte ikkje å kopiere – prøv igjen.");
+      } }, ikon("📋"), "Kopier annonsen"),
+        h("p", { class: "hint", text: "Dette blir kopiert:" }),
+        h("p", { class: "annonse-tekst", text: tekst })),
+      steg(2, h("p", {}, "Opne ", h("strong", { text: "Facebook" }), " og gå inn i gruppa (t.d. ei kjøp-og-sal-gruppe for Førde eller Naustdal). Trykk på ",
+        h("strong", { text: "skrivefeltet øvst" }), " (der det står «Skriv noe …»). ", h("strong", { text: "Ikkje vel «Selg noe»." }))),
+      steg(3, h("p", {}, "Er det alt tekst i feltet, tøm det først. ", h("strong", { text: "Hald fingeren" }),
+        " i det tomme feltet til det kjem opp «Lim inn». Trykk ", h("strong", { text: "«Lim inn» éin gong" }), ".")),
+      steg(4, h("p", {}, "Vent nokre sekund – då kjem eit ", h("strong", { text: "bilete av veden med prisane" }), " under teksten. Trykk ",
+        h("strong", { text: "«Publiser»" }), ". Ferdig!"),
+        h("p", { class: "hint", text: "Kjem det ikkje noko bilete? Det er greitt – lenkja verkar likevel. " +
+          "Står det at innlegget ventar på godkjenning, er alt i orden. Ikkje legg det ut på nytt." })),
+      h("div", { class: "boks-gul" },
+        h("p", { style: "margin:0 0 6px" }, h("strong", { text: "Ikkje gjer dette:" })),
+        ikkje("Ikkje ta skjermbilde av annonsen – då kan ikkje folk trykke på lenkja."),
+        ikkje("Ikkje trykk «Lim inn» fleire gonger."),
+        ikkje("Ikkje vel «Selg noe» – der verkar ikkje lenkja."),
+        ikkje("Ikkje legg ut i meir enn 2–3 grupper same dag – då kan Facebook stoppe innlegga."),
+        h("p", { style: "margin:8px 0 0", text: "Kom teksten dobbelt? Hald inne sletteknappen på tastaturet (pila med kryss i, til høgre) " +
+          "til feltet er heilt tomt. Lim så inn éin gong." }))));
   }
 
   /* ---------- Oversikt over salet ---------- */
 
   function oppsummer(liste) {
-    const sum = { antall: liste.length, total: 0, ved: 0, frakt: 0 };
-    for (const p of C.produkter) sum[p.id] = 0;
+    const sum = { antall: liste.length, total: 0, ved: 0, frakt: 0, gratis: {} };
+    for (const p of C.produkter) { sum[p.id] = 0; sum.gratis[p.id] = 0; }
     for (const o of liste) {
       sum.total += o.total || 0;
       sum.ved += o.ved || 0;
       sum.frakt += o.frakt || 0;
       for (const p of C.produkter) sum[p.id] += (o.antall && o.antall[p.id]) || 0;
+      const g = o.gratis || Ved.gratisFor(o);
+      for (const p of C.produkter) sum.gratis[p.id] += g[p.id] || 0;
     }
     return sum;
   }
@@ -597,6 +574,8 @@
     const fra = (k) => iAar.filter((o) => (o.kilde || "app") === k).length;
     const kjelder = "Frå nettsida: " + fra("nettside") + " · Telefon, Facebook o.l.: " + fra("app") + " · Kjøpt på staden: " + fra("innom");
     const antalPaaminning = paaminningsKundar().length;
+    const gittBort = C.produkter.filter((p) => sum.gratis[p.id] > 0)
+      .map((p) => tall(sum.gratis[p.id]) + " " + (sum.gratis[p.id] === 1 ? p.eintal : p.fleirtal)).join(" og ");
 
     const delTekst = () => [
       "Vedsal " + aar + " (" + C.navn + ")",
@@ -606,6 +585,7 @@
       "", ...maaneder.map(([navn, s]) => navn + ": " + kr(s.total) + " (" + s.antall + " best.)"),
       "", "Ikkje betalt no: " + kr(ubetalt.total),
       kjelder,
+      ...(gittBort ? ["Gitt bort i tilbodet: " + gittBort] : []),
       "Kundar som vil ha påminning neste haust: " + antalPaaminning,
     ].join("\n");
 
@@ -625,6 +605,7 @@
         ...maaneder.map(([navn, s]) => h("tr", {}, h("td", { text: navn + " (" + s.antall + ")" }), h("td", { text: kr(s.total) }))))
         : h("p", { class: "tom", text: "Ingen ferdige bestillingar i " + aar + "." }),
       iAar.length ? h("p", { class: "hint", style: "margin-top:12px", text: "Kvar kom bestillingane frå? " + kjelder }) : null,
+      gittBort ? h("p", { class: "hint", text: "Gitt bort i tilbodet: " + gittBort + "." }) : null,
       h("div", { style: "margin-top:18px" }, mvaBoks),
       h("div", { class: "stabel", style: "margin-top:18px" },
         h("a", { class: "knapp", href: "#/paaminning" }, ikon("💬"), "Påminning neste haust (" + antalPaaminning + " kundar)"),
@@ -668,9 +649,10 @@
 
   function paaminningsTekst(k) {
     const bjork = C.produkter[0];
-    const rabatt = C.rabatt ? " (" + kr(C.rabatt.pris) + " frå " + C.rabatt.fraAntal + " sekkar)" : "";
-    return "Hei " + fornavn(k.navn) + "! Det nærmar seg fyringssesongen. Eg har tørr bjørkeved og granved klar – " +
-      "bjørk " + kr(bjork.pris) + " per 60 l sekk" + rabatt + ".\nBestill her: " + nettside() +
+    const pris = (C.utselt || []).includes(bjork.id) ? "" : " – bjørk " + kr(bjork.pris) + " per 60 l sekk";
+    const tilbod = Ved.tilbodTekst(true) ? ". " + Ved.tilbodTekst(true) : "";
+    return "Hei " + fornavn(k.navn) + "! Det nærmar seg fyringssesongen. Eg har tørr " + vedtypar() + " klar" + pris + tilbod +
+      ".\nBestill her: " + nettside() +
       " – eller berre svar på denne SMS-en.\nVil du ikkje ha fleire påminningar, svar NEI.\nHelsing " + C.selgerFornavn + ", " + C.navn;
   }
 

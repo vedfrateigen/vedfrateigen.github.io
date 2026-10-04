@@ -410,22 +410,23 @@ def side_forsiden(c):
 def side_ny_bestilling(c):
     y = ny_side(c, "Når nokon vil kjøpe ved", kapittel=2,
                 ingress="Det tek under eitt minutt. Appen reknar ut prisen medan du fyller inn.")
-    pw, gap = 170, 64
+    pw, gap = 152, 64
     x1 = (W - 2 * pw - gap) / 2
     b1 = telefon(c, "13-ny-utfylt-topp.png", x1, y, pw, [(1, 80), (2, 534), (3, 1738), (4, 2190)])
     b2 = telefon(c, "14-ny-utfylt-bunn.png", x1 + pw + gap, y, pw, [(5, 541), (6, 2884), (7, 3122)])
     y = to_kolonner_steg(c, min(b1, b2) - 22, [
         "Trykk «Ny bestilling» på framsida.",
-        "Trykk <b>+</b> til rett tal sekkar – bjørk, gran eller laus kubikk.",
+        "Trykk <b>+</b> til rett tal sekkar – bjørk, gran eller stabla kubikk.",
         "Vel «Levering» eller «Hentar sjølv».",
         "Skriv adressa og trykk på rett forslag. <b>Frakta blir rekna ut av seg sjølv.</b>",
         "Skriv namn og telefonnummer. Vil kunden ha SMS neste haust, kryss av.",
         "Trykk <b>«Lagre bestillinga»</b>. Ferdig!",
         "Vil du sende prisen til kunden? Trykk «Send prisen til kunden».",
     ]) - 6
-    boks(c, M, y, W - 2 * M, "<b>Appen passar på for deg:</b> Rabatten frå 20 sekkar bjørk blir rekna ut av seg sjølv, og "
-         "appen seier frå viss ei levering er under 10 sekkar (du kan lagre likevel). Vil du ha ein annan pris på frakta, "
-         "trykk «Endre frakt» – til dømes når du leverer til fleire på same tur.", bg=GRONN_L, st=KORT)
+    y = boks(c, M, y, W - 2 * M, "<b>Appen passar på for deg:</b> Gratissekken i tilbodet kjem med av seg sjølv, og appen seier frå "
+             "viss ei levering er under 10 sekkar (du kan lagre likevel). Leverer du til fleire på same tur? Trykk «Endre frakt».",
+             bg=GRONN_L, st=KORT)
+    assert y >= 44, f"Boksen nedst går over sidetalet (y = {y:.0f})"
 
 
 def side_levert(c, pris_sms):
@@ -512,17 +513,17 @@ def side_priser(c):
     yy = y - 36
     for p in k.C["produkter"]:
         yy = rad(yy, p["kortnavn"], k.kr(p["pris"]), p["detalj"])
-    R = k.C.get("rabatt")
-    if R:
-        yy = rad(yy, f"{R['fraAntal']} sekkar bjørk eller fleire", k.kr(R["pris"]),
-                 "Rabattpris per sekk – appen reknar det ut sjølv")
+    T = k.C.get("tilbod")
+    if T:
+        yy = rad(yy, f"Fast tilbod: kvar {T['per']}. sekk bjørk", f"+{T['antal']} gran gratis",
+                 "Appen legg til gratissekken sjølv – han står under namnet til kunden")
     yy -= 16
     c.setFont("Av-H", 15)
     c.setFillColor(TEKST)
     c.drawString(M, yy, "Frakt")
     L = k.C["levering"]
     kmsats = f"{L['krPerKm']:.2f}".replace(".", ",")
-    yy = para(c, f"<b>Levering frå {L['minstSekkar']} sekkar</b> (eller 1 m³). Tidspunkt avtalar de på SMS. "
+    yy = para(c, f"<b>Levering frå {L['minstSekkar']} sekkar</b> (eller ½ m³). Tidspunkt avtalar de på SMS. "
               "Frakta blir rekna ut frå køyrde kilometer tur/retur frå Teigavegen:", M, yy - 10, kol, BROD) - 8
     yy = boks(c, M, yy, kol, f"<b>{kmsats} kr per km</b> · minst {k.kr(L['minimum'])} · "
               f"blir runda opp til næraste {L['rundOppTil']} kr",
@@ -549,8 +550,9 @@ def side_facebook_oversikt(c):
     c.setFillColor(TEKST)
     c.drawString(M, y, "Facebook-annonse")
     c.drawString(M + kol + 30, y, "Sal i år")
-    para(c, "Vel eit bilete og trykk <b>«Del på Facebook»</b>. Vel Facebook – biletet kjem med av seg sjølv. "
-         "Teksten med prisane er alt kopiert: hald fingeren i tekstfeltet og vel <b>«Lim inn»</b>.",
+    para(c, "Trykk <b>«Kopier annonsen»</b>. Gå inn i gruppa på Facebook, trykk på skrivefeltet øvst (ikkje «Selg noe»), hald fingeren i "
+         "feltet og trykk <b>«Lim inn» éin gong</b>. Biletet med prisane kjem av seg sjølv. <b>Ikkje bruk skjermbilde</b> – då verkar "
+         "ikkje lenkja. Sjå Facebook-guiden.",
          M, y - 10, kol, KORT)
     para(c, "Sjå kor mykje du har selt, kor mange sekkar, frakt og kven som ikkje har betalt. Nedst ser du kor nær du er "
          "<b>50 000 kr – grensa for moms</b>. «Send oversikta til Benjamin» sender tala. Her finn du òg "
@@ -575,7 +577,7 @@ def mini_plakat(c, x, y, w):
     c.setFont("Av-B", w * 0.058)
     c.drawString(x + w * 0.08, y + h * 0.59, "Bjørk 60 l   125 kr")
     c.drawString(x + w * 0.08, y + h * 0.54, "Gran 60 l    79 kr")
-    c.drawString(x + w * 0.08, y + h * 0.49, "Laus m³   2 000 kr")
+    c.drawString(x + w * 0.08, y + h * 0.49, "Stabla m³  2 000 kr")
     q = w * 0.34
     qx, qy = x + w * 0.58, y + h * 0.30
     import random
@@ -630,7 +632,7 @@ def side_ideer(c):
     ideer = [
         ("Kort i kvar leveranse", "Eit lite kort med QR-kode: «Takk for handelen! Bestill igjen – skann koden». Gjer det lett å kjøpe av deg neste gong.", "Ferdig laga · Billeg å skrive ut"),
         ("Facebook i sesongen", "Legg ut annonsen i lokale kjøp-og-sal-grupper når fyringssesongen startar, og når det blir kaldt.", "Gratis · Ferdig tekst i appen"),
-        ("Opptenningspakke", "Sel gran saman med bjørk: «10 sekkar bjørk + 1 sekk gran». Enkelt meirsal til kundar som alt handlar.", "Meir sal per kunde"),
+        ("Nemn det faste tilbodet", "Kvar 10. sekk bjørk gir 1 sekk granved gratis. Sei det når folk ringjer – mange tek då 10 sekkar.", "I gang · meir sal per kunde"),
         ("Synleg på Google Maps", "Ei gratis Google-oppføring gjer at du dukkar opp når folk søkjer etter ved i Førde og Naustdal.", "Gratis · Éin gong"),
         ("Samkøyring", "Bestiller to naboar samtidig, køyrer du éin tur. Litt rabatt på frakta – billegare for dei, mindre køyring for deg.", "Sparer tid og diesel"),
         ("Sommarpris", "Litt lågare pris om sommaren gir sal i lågsesongen – og kundane får tørr ved klar til hausten.", "Jamnare sal"),
