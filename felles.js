@@ -723,9 +723,19 @@
     });
   }
 
+  // Prislinja i den faste teksten på kundesida (index.html <p id="om-prisar">). Testen krev at HTML-en er lik denne,
+  // og kunde.js skriv henne på nytt, så utselt og tilbod alltid stemmer.
+  function omPrisTekst() {
+    const p = Object.fromEntries(C.produkter.map((x) => [x.id, x]));
+    const pris = (x, per) => ((C.utselt || []).includes(x.id) ? "er utselt no" : "kostar " + kr(x.pris) + " " + per);
+    const t = tilbodTekst(true);
+    return ("Bjørkeved " + pris(p.sekk, "per 60 l sekk") + ", og granved " + pris(p.gran, "per sekk") +
+      ". Stabla kubikk bjørk " + pris(p.m3, "per m³") + ". Ein favn er 2,4 m³ stabla ved." + (t ? " " + t + "." : "")).replace(/\u00a0/g, " ");
+  }
+
   window.Ved = {
     C, tall, kr, rund1, tomtAntall, naaPriser, beskrivAntall, harRabatt, einingspris, varesum, sekkEkvivalent, leveringOk,
-    rabattFor, tilbodNaa, tilbodFor, tilbodTekst, gratisFor, leveringspris, beregn, nyId,
+    rabattFor, tilbodNaa, tilbodFor, tilbodTekst, omPrisTekst, gratisFor, leveringspris, beregn, nyId,
     telefonLenke, visTelefon, smsLenke, kartLenke, klamp, ordreTilParam, paramTilOrdre,
     luftlinjeKm, kjoreavstand, tolkAdresse, sokAdresse, h, visMelding, skjulMelding, kopier, del, lagSkjema,
     registrerOffline, oppdatering,

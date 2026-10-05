@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vedfrateigen.github.io/sitemap.xml

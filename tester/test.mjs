@@ -13,6 +13,34 @@ const nbsp = " ";
 let ok = 0;
 const test = (navn, fn) => { fn(); ok++; console.log("✔", navn); };
 
+test("søkjemotor: prisane i index.html (Google-data og fast tekst) er like config.js", () => {
+  const html = readFileSync(new URL("index.html", rot), "utf8");
+  const ld = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  const varer = ld.hasOfferCatalog.itemListElement;
+  assert.equal(varer.length, V.C.produkter.length);
+  for (const p of V.C.produkter) {
+    const o = varer.find((x) => x.name === p.navn);
+    assert.ok(o, "manglar i Google-data: " + p.navn);
+    assert.equal(Number(o.offers.price), p.pris, "feil pris i Google-data: " + p.navn);
+  }
+  const prisar = V.C.produkter.map((p) => p.pris);
+  assert.equal(ld.priceRange, Math.min(...prisar) + "–" + Math.max(...prisar) + " kr", "priceRange i Google-data er ikkje lik config.js");
+  assert.equal(ld.telephone, "+47 " + V.visTelefon(V.C.telefon));
+  assert.equal(`${ld.address.streetAddress}, ${ld.address.postalCode} ${ld.address.addressLocality}`, V.C.henteadresse);
+  assert.deepEqual([ld.geo.latitude, ld.geo.longitude], [V.C.start.lat, V.C.start.lon]);
+  assert.equal(ld.paymentAccepted.includes("Vipps"), V.C.vipps, "Google-data: Vipps");
+  const start = html.indexOf('id="om-veden"');
+  const fast = html.slice(start, html.indexOf("</section>", start));
+  const linje = fast.match(/<p id="om-prisar">(.*?)<\/p>/)[1];
+  assert.equal(linje, V.omPrisTekst(), "prislinja i #om-veden er ikkje lik config.js – kopier V.omPrisTekst() inn i index.html");
+  assert.ok(fast.includes("frå " + V.C.levering.minstSekkar + " sekkar eller ½ m³"), "fast tekst: minstebestillinga er ikkje lik config.js");
+  assert.ok(fast.includes(V.visTelefon(V.C.telefon)), "fast tekst: telefonnummeret er ikkje likt config.js");
+  assert.equal(fast.includes("Vipps"), V.C.vipps, "fast tekst: Vipps");
+  assert.ok(fast.includes("Over " + V.C.levering.maksKm + " km"), "fast tekst: maksKm er ikkje lik config.js");
+  const tittel = html.match(/<title>(.*?)<\/title>/)[1];
+  assert.ok(tittel.length <= 65, "tittelen er for lang for Google: " + tittel.length);
+});
+
 test("frakt: 3,50 kr per km tur/retur, rundet opp til 50, minst 100", () => {
   assert.equal(V.leveringspris(20.5), 150);   // Naustdal sentrum: 143,50 → 150
   assert.equal(V.leveringspris(32.5), 250);   // Førde sentrum: 227,50 → 250

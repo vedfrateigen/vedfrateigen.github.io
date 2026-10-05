@@ -1,5 +1,14 @@
 # Endringslogg – Vedsal
 
+## 2026-10-05 – Søkemotorer
+
+- Ny tittel og beskrivelse med søkeord, strukturerte data (LocalBusiness med produkter og priser, og WebSite), og en fast tekst med spørsmål og svar som Google kan lese uten JavaScript. Ord som brukes: ved til sals, bjørkeved, granved, fyringsved, opptenningsved, ved i sekk, stabla kubikk, favn, vedlevering, Naustdal, Førde, Florø, Sunnfjord og Kinn.
+- `robots.txt`, `sitemap.xml` og IndexNow-nøkkel.
+- Testen sjekker at priser, telefon, adresse, minstebestilling og tilbud i index.html er like config.js.
+- Rettet: `publiser.sh` publiserte selv om testene feilet (`&&` under `set -e`). Nå stopper det.
+- Facebook-bildet har vilkåret «så lenge det er granved att» i tilbudsmerket.
+- Gjennomgått av 4 granskere med etterprøving (16 funn rettet eller lagt til som gjenstående).
+
 ## 2026-10-04 – Fast tilbud, stablet kubikk og enklere Facebook
 
 - Fast tilbud erstatter 120-kr-rabatten: for hver 10. sekk bjørk får kunden 1 sekk granved gratis, uten tak. Det står som «Fast tilbod: … – så lenge det er granved att» i prislista, annonsen, påminnelsen, Facebook-bildet og plakaten (Forbrukertilsynet om betingede tilbud). Gratissekken vises i kalkulatoren, i SMS-en og på kortet, men ikke i summen. Gamle bestillinger beholder reglene de ble lagret med.

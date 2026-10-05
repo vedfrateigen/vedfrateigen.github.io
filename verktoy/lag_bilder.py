@@ -60,8 +60,9 @@ if T and "gran" not in (k.C.get("utselt") or []):
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(198, 40, 40, 255))
     d.ellipse([cx - r + 9, cy - r + 9, cx + r - 9, cy + r - 9], outline="white", width=3)
     # «Fast tilbod» – Forbrukertilsynet: faste tilbod skal merkast som faste overalt der dei blir marknadsførte.
-    for tekst, storrelse, nr, dy in [("FAST TILBOD", 25, 8, -72), (f"Kvar {T['per']}. sekk", 23, 0, -34),
-                                     (f"bjørk gir {T['antal']} sekk", 23, 0, -6), ("granved gratis", 23, 0, 22)]:
+    for tekst, storrelse, nr, dy in [("FAST TILBOD", 24, 8, -86), (f"Kvar {T['per']}. sekk", 22, 0, -52),
+                                     (f"bjørk gir {T['antal']} sekk", 22, 0, -26), ("granved gratis", 22, 0, 0),
+                                     ("så lenge det er", 16, 0, 34), ("granved att", 16, 0, 54)]:
         fnt = font(storrelse, nr)
         b = d.textlength(tekst, font=fnt)
         d.text((cx - b / 2, cy + dy), tekst, font=fnt, fill="white")

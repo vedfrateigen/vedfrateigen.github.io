@@ -29,6 +29,14 @@ Enkel løsning for pappas vedsalg. Brukertekstene er på **nynorsk**, siden det 
 - **Adressesøk:** Kartverkets åpne API-er (`ws.geonorge.no/adresser`, `/stedsnavn`). **Kjøreavstand:** OSRM (`router.project-osrm.org`). Svarer ikke OSRM, brukes luftlinje × 1,4 og prisen merkes «ca.». Pappa kan alltid skrive frakten selv.
 - **Personvern:** navn, telefon og adresse på ferdige og betalte handler slettes fra pappas telefon etter 15 måneder (`slettEtterMaaneder`). Beløpene blir igjen i oversikten.
 
+## Søkemotorer (Google, Bing)
+
+- `index.html` har tittel og beskrivelse med søkeordene (ved til sals, bjørkeved, granved, vedlevering, Naustdal, Førde, Florø), strukturerte data (JSON-LD: `LocalBusiness` med produkter og priser, og `WebSite` med navnet) og en fast tekst (`#om-veden`) som Google kan lese uten JavaScript.
+- Prislinja i `#om-veden` (`<p id="om-prisar">`) må være ordrett lik `Ved.omPrisTekst()`. Priser, `priceRange`, telefon, adresse, minstebestilling og maks km i `index.html` sjekkes mot `config.js` av `tester/test.mjs`. Endrer du `config.js`, sier testen nøyaktig hva som må rettes, og `publiser.sh` stopper til det er gjort. `kunde.js` skriver prislinja på nytt i nettleseren, så utselt og tilbud alltid stemmer for besøkende.
+- `robots.txt` og `sitemap.xml` ligger i rota. `publiser.sh` oppdaterer `lastmod` når innholdet er endret.
+- IndexNow: nøkkelfila `<nøkkel>.txt` ligger i rota (nøkkelen står også i `verktoy/bygg/indexnow-nokkel.txt`). Etter publisering: `curl "https://api.indexnow.org/indexnow?url=https://vedfrateigen.github.io/&key=<nøkkel>"` varsler Bing og andre søkemotorer. Google bruker ikke IndexNow.
+- Gjenstår (må gjøres med Google-konto): Google Search Console (verifiser, send inn sitemap, «Be om indeksering») og Google Bedriftsprofil «Ved frå Teigen» (kategori vedleverandør, tjenesteområde Naustdal/Førde/Florø). Bedriftsprofilen gir mest effekt, fordi lokale søk viser kartet øverst.
+
 ## Endre priser (eller telefonnummer, frakt …)
 
 1. Rediger `config.js`. **Endre aldri `id` på et produkt** som har gamle bestillinger. Endre bare pris og tekst.

@@ -139,5 +139,9 @@
     h("p", { text: "© " + new Date().getFullYear() + " " + C.navn + " · " + C.selger + " · " + C.henteadresse + " · " + Ved.visTelefon(C.telefon) }),
     h("p", { text: "Nettside og app: © 2026 Benjamin Bruflot Teigen · 913 47 058" }));
 
+  // Den faste teksten for søkjemotorar: hald prislinja lik config.js (t.d. når gran er utselt).
+  const omPrisar = document.getElementById("om-prisar");
+  if (omPrisar) omPrisar.textContent = Ved.omPrisTekst();
+
   Ved.registrerOffline();
 })();
